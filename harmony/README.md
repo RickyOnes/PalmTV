@@ -73,3 +73,22 @@ harmony/
 - wasm 运行时的 `GUARD_PAGES` 模式在 ohos 上不可用（大块 `mmap` 保留映射会"假成功"）⇒
   改用纯软件边界检查。
 - native 日志必须走 hilog：App 进程的 stdout/stderr **不进** hilog，`fprintf` 打的东西看不到。
+
+## 同步与维护
+
+本目录是**上游开发树的一份公开快照**，请勿在此目录里做功能开发（会被下次同步覆盖）。
+同步前先备份本文件，或用下面的排除参数跳过它。
+
+```powershell
+robocopy <上游开发树> <本目录> /E ^
+  /XD oh_modules build .hvigor .idea .preview node_modules .cmgtest .cxx .clangd rawfile ^
+  /XF namecache.json local.properties README.md HANDOFF.md *.rar *.bak *.log *.hap
+```
+
+同步后**务必**先看 `git status`：
+
+- `/rawfile/` 与 `entry/src/main/cpp/CMakeLists.txt` 不应出现（前者是运行时资产，后者指向本地内核）；
+- `entry/src/main/ets/common/` 下的取流配置、签名实现、cKey 实现不应出现（见上一节表格）；
+- 频道图标若被覆盖成上游版本，需要重新替换为**自绘占位图**。
+
+> 一条原则：**上游有的、仓库里没有的东西，不要用 `git add -f` 硬塞进来。**

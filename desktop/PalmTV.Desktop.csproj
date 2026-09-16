@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>tv-icon.ico</ApplicationIcon>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- 不生成 .pdb 调试文件 -->
+    <DebugType>none</DebugType>
+    <!-- 只保留 .pdb 关联文件（避免复制 .xml 文档） -->
+    <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions>
+    <!-- 启用单文件压缩 -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- 只包含中文资源，减小体积 -->
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+    <!-- 跳过 workload 包缺失检查（Android workload 已卸载） -->
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
+    <!-- Wasmtime 已移除: WasmSigner (C# 侧签名) 是死代码, 签名早已全部由页面内 keygen_bg.wasm 完成。
+         该包会带进 wasmtime.dll(8.73MB) + Wasmtime.Dotnet.dll(614KB)。源码保留在 legacy/WasmSigner.cs。 -->
+  </ItemGroup>
+
+  <!-- legacy/: 仅供分析/回溯的历史代码, 不参与编译 -->
+  <ItemGroup>
+    <Compile Remove="legacy/**" />
+    <None Include="legacy/**" />
+  </ItemGroup>
+
+  <!-- 伴生文件（调试和发布都复制） -->
+  <ItemGroup>
+    <Content Include="player.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <Content Include="tv-icon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    <!-- ★ 以下三项为官方素材, 不随公开仓库分发(留在私有备份), 本地存在才随调试输出复制 -->
+    <Content Include="keygen_bg.wasm" Condition="Exists('keygen_bg.wasm')" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="RJq7sO71JF.wasm" Condition="Exists('RJq7sO71JF.wasm')" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="ts_module_body.js" Condition="Exists('ts_module_body.js')" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="gen_yspticket.cjs" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" />
+    
+    <!-- ★ 使用宏明确路径 ★ proxy.exe: 调试输出需要; 发布由 publish.ps1 单独复制, 不进 publish 目录。
+         源码公开克隆不携带编译好的 exe, 存在时才复制。 -->
+    <Content Include="$(MSBuildProjectDirectory)\..\proxy\proxy.exe"
+            Condition="Exists('$(MSBuildProjectDirectory)\..\proxy\proxy.exe')"
+            CopyToOutputDirectory="PreserveNewest"
+            CopyToPublishDirectory="Never"
+            Link="proxy.exe" />
+
+    <!-- ★ 代理缓存(官方素材, 留在私有备份, 本地存在时才复制):
+         slim 三件套是本地生成产物(rev/gen_slim.cjs), 上游不存在, 代理缓存未命中会 404。 -->
+    <Content Include="$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_cmg.slim.js"
+            Condition="Exists('$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_cmg.slim.js')"
+            CopyToOutputDirectory="PreserveNewest"
+            CopyToPublishDirectory="Never"
+            Link="sapi_cache\assets_2025_wasm_cmg.slim.js" />
+    <Content Include="$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_eb_prog.bin"
+            Condition="Exists('$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_eb_prog.bin')"
+            CopyToOutputDirectory="PreserveNewest"
+            CopyToPublishDirectory="Never"
+            Link="sapi_cache\assets_2025_wasm_eb_prog.bin" />
+    <Content Include="$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_reloc_table.bin"
+            Condition="Exists('$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_reloc_table.bin')"
+            CopyToOutputDirectory="PreserveNewest"
+            CopyToPublishDirectory="Never"
+            Link="sapi_cache\assets_2025_wasm_reloc_table.bin" />
+    <Content Include="$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_hls.cmg.js"
+            Condition="Exists('$(MSBuildProjectDirectory)\..\proxy\sapi_cache\assets_2025_wasm_hls.cmg.js')"
+            CopyToOutputDirectory="PreserveNewest"
+            CopyToPublishDirectory="Never"
+            Link="sapi_cache\assets_2025_wasm_hls.cmg.js" />
+  </ItemGroup>
+</Project>

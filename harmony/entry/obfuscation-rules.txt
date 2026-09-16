@@ -1,0 +1,65 @@
+# Define project specific obfuscation rules here.
+# You can include the obfuscation configuration files in the current module's build-profile.json5.
+#
+# For more details, see
+#   https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/source-obfuscation
+#
+# ★ 本工程 release 构建已启用混淆（entry/build-profile.json5 → buildOptionSet[release]
+#   → arkOptions.obfuscation.ruleOptions.enable = true）。下面的 keep 名单是本项目
+#   「ArkWeb 播放壳」架构下的硬性要求，删除任一条都会导致运行时静默失效。
+
+# Obfuscation options:
+# -disable-obfuscation: disable all obfuscations
+# -enable-property-obfuscation: obfuscate the property names
+# -enable-toplevel-obfuscation: obfuscate the names in the global scope
+# -compact: remove unnecessary blank spaces and all line feeds
+# -remove-log: remove all console.* statements
+# -print-namecache: print the name cache that contains the mapping from the old names to new names
+# -apply-namecache: reuse the given cache file
+
+# Keep options:
+# -keep-property-name: specifies property names that you want to keep
+# -keep-global-name: specifies names that you want to keep in the global scope
+
+-enable-property-obfuscation
+-enable-toplevel-obfuscation
+-enable-filename-obfuscation
+-enable-export-obfuscation
+
+# ★ 不要加 -remove-log：本项目的播放链路诊断完全依赖 console.info（postMessage +
+#   [play]/[proxy]/[player-cmg] 前缀日志），删掉后线上问题无法定位。
+# -remove-log
+
+# ★ 可选：-compact（去掉空白与换行以减小体积）。风险低，但会让反混淆后的行号信息变差，
+#   定位线上崩溃时再开启即可。
+# -compact
+
+# ★ 可选：发布前建议临时加 -print-namecache 生成映射表并本地归档，
+#   后续还原崩溃栈时需要（每次构建必须换文件名，避免覆盖）。
+# -print-namecache ./namecache.json
+
+# ==================== 必须保留的属性名 ====================
+# 属性混淆只改「标识符形式」的属性名，不改字符串字面量 key 与下标访问（obj['x']）。
+# 只要两端中有一端是字符串（JS 侧 / 外部 Go 代理 / 下标读取），该名字就必须保留。
+
+-keep-property-name
+# ArkWeb javaScriptProxy：Index.ets 注入对象 { onMsg: ... }，而 methodList: ['onMsg']
+# 与 player.html 的 window.__nativeBridge.onMsg(...) 都是字符串。改名即桥接断开，
+# 页面 postMessage 的 refresh/state/cmg/audio 消息全部丢失。
+onMsg
+# 本地代理 /sign 契约（ProxyClient.sign ↔ ArktsProxy.handleSign）：
+#   ProxyClient 用 JSON.stringify({ kind, fields, salt }) 发，ArktsProxy 用 parsed.kind
+#   点号读；两端同为标识符时内部仍自洽，但 External 联调模式（开发机 Go 代理 hmos_proxy）
+#   要求字段名固定为 kind/fields/salt。
+kind
+fields
+salt
+# /sign 响应字段：ArktsProxy 侧已改为字面量 key（{'sig': ...}），ProxyClient 侧是
+# obj['sig'] 下标读取。保留 sig 可防止将来有人改回 { sig: sig } 时静默出错。
+sig
+
+# ==================== 必须保留的全局名 ====================
+# 页面入口组件名。虽然路由表在文件名混淆时会同步更新，但显式保留可避免
+# loadContent('pages/Index') 在个别 SDK 版本上的匹配问题。
+-keep-global-name
+Index

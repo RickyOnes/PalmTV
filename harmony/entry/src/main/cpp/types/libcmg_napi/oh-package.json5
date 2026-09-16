@@ -1,0 +1,6 @@
+{
+  "name": "libcmg_napi.so",
+  "types": "./index.d.ts",
+  "version": "1.0.0",
+  "description": "CMG 解密 N-API 模块（hmnative/native 的鸿蒙封装）"
+}

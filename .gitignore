@@ -1,0 +1,91 @@
+# ===== Build output =====
+*.exe
+*.dll
+bin/
+obj/
+desktop/bin/
+desktop/obj/
+
+# Go build artifact left in source dir
+proxy/proxy.exe
+
+# C# build / publish artifacts (regenerated on build)
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+*.xml
+
+# ===== Dependencies =====
+node_modules/
+
+# ===== Backups / release packages (compressed project snapshots) =====
+*.rar
+*.zip
+*.7z
+
+# ===== Third-party toolchain (wabt binaries) =====
+wabt反编译工具/
+
+# ===== Internal project data (agent memory) =====
+.codebuddy/
+
+# ===== Logs =====
+*.log
+
+# ===== Scratch / ad-hoc test files =====
+proxy/_*.js
+proxy/_*.cjs
+proxy/_*.wat
+
+# ===== OS =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== Project backups — local only, not for VCS =====
+/backup_*/
+*.tar.gz
+
+# ============================================================
+#  以下部分不随公开仓库分发（本地保留；另有私有仓库做备份）
+# ============================================================
+
+# --- 桌面端：播放页与解密调用链路 ---
+/desktop/player.html
+/desktop/gen_yspticket.cjs
+/desktop/legacy/
+
+# --- 代理：把补丁注入官方脚本的实现 ---
+/proxy/main.go
+
+# --- 旧 ArkWeb 版工程（已被 harmony/ 取代）---
+/arkweb-legacy/
+
+# --- 鸿蒙端：native 内核、官方资产、签名与 cKey 实现 ---
+/harmony/entry/src/main/cpp/CMakeLists.txt
+/harmony/entry/src/main/ets/common/ckey_core.ts
+/harmony/entry/src/main/ets/common/ProxySigner.ets
+#   （取流配置的私有版直接放到 _private/，不要放进 harmony/）
+/harmony/entry/src/main/resources/rawfile/
+/harmony/.codebuddy/
+
+# --- 鸿蒙构建设备信息 ---
+/harmony/local.properties
+/harmony/**/namecache.json
+
+# --- 官方素材与代理缓存 ---
+/源文件/
+/proxy/sapi_cache/
+/desktop/keygen_bg.wasm
+/desktop/RJq7sO71JF.wasm
+/desktop/ts_module_body.js
+
+# --- 逆向实验室产物 ---
+/rev/
+
+# --- 本地私存（内部文档、快照、工具输出）---
+/_private/
+
+# ===== Ad-hoc outputs / planning notes not in the README tree =====
+/run_out*.txt
+/hmos_plan.md

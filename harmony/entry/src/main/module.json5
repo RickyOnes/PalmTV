@@ -1,0 +1,67 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "phone",
+      "tablet",
+      "2in1"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    /* ★ 权限只声明**真正用到**的（2026-09-16 清理）：
+     *   - INTERNET：取流 + 本地解密代理（必需）
+     *   - KEEP_BACKGROUND_RUNNING：与 backgroundModes.audioPlayback 配套（后台播放/播控卡片保活）
+     *   已删除 `ACCESS_NOTIFICATION_POLICY`：它是"改系统音量"时代申请的（`AudioManager.setVolume`，
+     *   早已改回 `AVPlayer.setVolume` ⇒ 全工程 0 引用）。声明了不用的权限，上架审核会被问询。 */
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      },
+      {
+        "name": "ohos.permission.KEEP_BACKGROUND_RUNNING"
+      }
+    ],
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:layered_image",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        // ★ 声明后台音频模式，确保 AVSession 在后台/锁屏时不被杀，卡片可正常显示
+        "backgroundModes": ["audioPlayback"],
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "ohos.want.action.home"
+            ]
+          }
+        ]
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "name": "EntryBackupAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "type": "backup",
+        "exported": false,
+        "metadata": [
+          {
+            "name": "ohos.extension.backup",
+            "resource": "$profile:backup_config"
+          }
+        ],
+      }
+    ]
+  }
+}

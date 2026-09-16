@@ -1,0 +1,80 @@
+{
+  "app": {
+    // ★ 签名配置由 DevEco Studio 首次打开时生成（bundleName 已改为 com.RickyOne.PalmTV，
+    //   原工程的签名与旧 bundleName 绑定，不能直接复用）。
+    //   步骤：DevEco → File → Project Structure → Signing Configs → 勾选 "Automatically generate signature"
+    //
+    // ⚠️ 2026-09-16 提醒：本文件含 keystore 路径与口令（DevEco 加密串）⇒ **不要把工程推到公开远端**。
+    //   容器的 `.gitignore` 只把它当普通源文件跟踪（本地仓库=self 回退点，可接受）；
+    //   若要分享/上远端，请把 `signingConfigs` 抽到本地文件或改用自动签名。
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\default_PalmTV_L_Hzhs37a6_xmuxPyonAAJddZWJt0NA5JdJt5IlFdrg=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B390F70C0BA957079F753CC6990BC7447314D8A36E64FCD4B7E72319E99A6B26F9CFC41F2E9E6E4",
+          "profile": "C:\\Users\\Administrator\\.ohos\\config\\default_PalmTV_L_Hzhs37a6_xmuxPyonAAJddZWJt0NA5JdJt5IlFdrg=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\default_PalmTV_L_Hzhs37a6_xmuxPyonAAJddZWJt0NA5JdJt5IlFdrg=.p12",
+          "storePassword": "0000001B2D2E47DD20CBE52840199BC98955EBFAC331364E203E40CDDBC34A63FD752A3DE5808B5B56214B"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        // ★ 必须显式引用 signingConfigs 里的条目，否则产物是 entry-*-unsigned.hap
+        //   （DevEco 的"Automatically generate signature"只会写 signingConfigs 数组，
+        //     不会替你补 products 里的引用）
+        "signingConfig": "default",
+        "targetSdkVersion": "6.1.1(24)",
+        "compatibleSdkVersion": "6.1.0(23)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      },
+      {
+        "name": "release",
+        "signingConfig": "default",
+        "targetSdkVersion": "6.1.1(24)",
+        "compatibleSdkVersion": "6.1.0(23)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default",
+            "release"
+          ]
+        }
+      ]
+    }
+  ]
+}

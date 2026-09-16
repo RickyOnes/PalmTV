@@ -1,0 +1,13 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "掌上电视主模块",
+  "main": "",
+  "author": "RickyOne",
+  "license": "",
+  "dependencies": {
+    // ★ native 解密模块（CMake 产物 libcmg_napi.so 的类型声明）
+    //   源码来自 hmnative/native/，由 src/main/cpp/CMakeLists.txt 编译
+    "libcmg_napi.so": "file:./src/main/cpp/types/libcmg_napi"
+  }
+}

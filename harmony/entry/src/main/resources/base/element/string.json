@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "掌上电视主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "掌上电视"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "掌上电视"
+    },
+    {
+      "name": "internet_reason",
+      "value": "需要使用网络进行数据传输"
+    }
+  ]
+}

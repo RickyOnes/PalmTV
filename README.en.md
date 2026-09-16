@@ -3,7 +3,7 @@
 > **Desktop edition** (C# / WPF / WebView2) + **HarmonyOS edition** (ArkTS / native AVPlayer)
 >
 > An engineering project that turns the whole chain of *channel list → stream resolution → local relay → playback*
-> into a clean, long-running, uninterrupted player. It never opens the upstream website, and the two editions share
+> into a clean, long-running, uninterrupted player. The two editions share
 > the same stream-orchestration approach while using **completely different playback internals**.
 
 ---

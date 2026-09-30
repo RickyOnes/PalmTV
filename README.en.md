@@ -1,10 +1,55 @@
 # PalmTV — A Cross-Platform Live TV Player
 
-> **Desktop edition** (C# / WPF / WebView2) + **HarmonyOS edition** (ArkTS / native AVPlayer)
+> **Desktop edition** (C# / WPF; **native LibVLC since v1.1.8**) + **HarmonyOS edition** (ArkTS / native AVPlayer)
 >
 > An engineering project that turns the whole chain of *channel list → stream resolution → local relay → playback*
 > into a clean, long-running, uninterrupted player. The two editions share
 > the same stream-orchestration approach while using **completely different playback internals**.
+
+---
+
+## 📦 Download (Windows x64 desktop build — unzip and run)
+
+The latest runnable build is on the **Releases** page: <https://github.com/RickyOnes/PalmTV/releases/latest>
+
+| Item | Value |
+|---|---|
+| Version | **v1.1.8** (2026-09-30) |
+| Asset | `PalmTV-v1.1.8-win-x64.zip` |
+| Size | 95.1 MB (99,757,878 bytes) |
+| SHA-256 | `85EDBDCA5C29FB7AD3C84CF0F6FBE522B09136DDC671C77A2F93CF1BFF3F7934` |
+| Requirements | Windows 10 / 11 x64; **no WebView2 Runtime needed** (VLC is bundled) |
+| How to run | Unzip anywhere → double-click `WinPalmTV.exe` |
+
+First-run notes:
+
+- **The first launch takes a little longer** (a few seconds): the first run initialises the runtime and unpacks the
+  bundled assets (channel logos, etc.) into a local cache. Later launches are fast; upgrading the app or unzipping
+  it into a new folder makes one more launch slower.
+- Logo cache, custom IPTV sources and the disclaimer state are stored in `%LOCALAPPDATA%\WinPalmTV\`
+  and survive upgrades or moving the folder.
+- Custom IPTV sources: About page → "Add / edit custom sources…".
+
+---
+
+## 🆕 Version evolution: v1.1.0 → v1.1.8 (build differences)
+
+| | **v1.1.0** (2026-09-16) | **v1.1.8** (2026-09-30) |
+|---|---|---|
+| Desktop playback core | Web player (`hls.js`) inside WebView2 | **Native LibVLC** (bundled `libvlc\`, pruned plugins) |
+| External dependency | System **WebView2 Runtime** | **None** (VLC ships in the archive) |
+| Decryption | In-page wasm (`cmg.slim.js` / `hls.cmg.js` / `eb_prog.bin` / `reloc_table.bin`) | **Native C**: CMG kernel inside `PalmTVCore.dll` |
+| Signing / ticket / cKey | Page JS + wasm + in-process V8 | **All native C** (`ysp_*`; cKey = home-grown AES-128-CBC) |
+| JS engine | ClearScript.V8 + page injection | **Removed entirely** (no JS engine, no injection) |
+| Package entries | exe + `proxy.exe` + `player.served.html` + `sapi_cache\` (4 files) + icon | exe + `proxy.exe` + `PalmTVCore.dll` + `libvlc\` + `logos.dat` |
+| Package size | 61.4 MB | **95.1 MB** |
+| Channels | 55 (CMG/ysp only) | **79** = 55 + 9 Jiangsu + 15 IPTV locals |
+| Logos | Text-only tiles | **79 packed logos** (`logos.dat`, extracted to the user cache at runtime) |
+| New capabilities | — | First-run disclaimer, About page, **custom IPTV sources**, stream pre-checks with no-signal fallback, EPG improvements |
+
+**Why the package grew**: 1.1.8 replaced "system WebView2 + in-page JS" with a **bundled LibVLC** (`libvlc\`, ~22 MB).
+In exchange you get **zero external dependencies** and an end to the whole "page not ready / injection failed" class of
+failures; the 1.5 MB pre-baked player page and the four injected assets are gone as well.
 
 ---
 
@@ -19,9 +64,14 @@
 
 ---
 
-## 1. The two editions
+## 1. The source in this repo is a **v1.1.0-era public snapshot**
 
-|  | **Desktop** — `desktop/` | **HarmonyOS** — `harmony/` |
+> ⚠️ Read this first: `desktop/`, `proxy/` and `harmony/` here are the **"application shell" snapshot from v1.1.0**
+> (WebView2 + wasm architecture). It is **not the same implementation** as the 1.1.8 build on the Releases page —
+> the 1.1.8 native kernel (`PalmTVCore.dll`) and the related rewrites **are not synced into this repository**.
+> Treat this repo as a **client-architecture reference**, not as "clone and build 1.1.8".
+
+|  | **Desktop** — `desktop/` (snapshot) | **HarmonyOS** — `harmony/` |
 |---|---|---|
 | Platform | Windows 10/11 (x64) | HarmonyOS NEXT |
 | UI | C# / WPF | ArkTS / ArkUI |
@@ -44,7 +94,7 @@
 
 ---
 
-## 2. Architecture
+## 2. Architecture (v1.1.0 snapshot)
 
 Both editions follow one idea: **the player only ever sees data it can play directly.**
 
@@ -68,12 +118,13 @@ Both editions follow one idea: **the player only ever sees data it can play dire
 
 - **Desktop**: in-page web player plus a Go reverse proxy that serves the player page same-origin, forwards media
   requests, and backs the EPG / stream-resolution endpoints.
+  (★ 1.1.8 plays with native LibVLC instead — no player page, no injection; see "Version evolution" above.)
 - **HarmonyOS**: native AVPlayer plus an ArkTS local service. Media processing happens in native code and is
   serialized on a worker thread, so the JS thread is never blocked.
 
 ---
 
-## 3. Layout
+## 3. Layout (v1.1.0 snapshot)
 
 ```
 PalmTV/
@@ -109,7 +160,7 @@ PalmTV/
 
 ---
 
-## 4. Build
+## 4. Build (v1.1.0 snapshot)
 
 ### Desktop
 
@@ -161,6 +212,10 @@ This repository is the **application shell**: it is readable and useful as a cli
 
 > All missing files are listed in `.gitignore`; they exist locally for development and are simply not distributed.
 
+> ★ Also note: the **1.1.8 native implementation is not in this repository either** — `PalmTVCore.dll`
+> (CMG decryption kernel + ysp signing/ticket/cKey), the VLC integration, the `logos.dat` logo-packing pipeline,
+> and features such as custom IPTV sources / first-run disclaimer / About page have not been synced here.
+
 ---
 
 ## 6. Diagnostics
@@ -172,6 +227,9 @@ This repository is the **application shell**: it is readable and useful as a cli
 
 Suggested order: verify the local service is listening → verify the player received a playlist → only then inspect
 the media module's statistics.
+
+> 1.1.8 is diagnosed differently: it uses native playback plus a native kernel, and logs come from
+> `WinPalmTV.exe --log` (there is no page `postMessage` stage any more).
 
 ---
 

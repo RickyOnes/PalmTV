@@ -38,8 +38,9 @@ public class TvApiClient
     //   备用路径: PlayerService.GenerateYspTicket() 用 Node 跑 gen_yspticket.cjs,
     //           同样复刻官方 _c, 失败时回退到本常量。
     //   攻破方法详见内部实现记录§2.6。
-    //   下面这串是 2026-02 抓包旧值 (61 字节、guid 不同、带时效性), 已过期, 仅供应急。
-    public const string YspTicket = "5c40d99c304df40d750e99bac51120e8f2527178eceecf574f8a3f41c8b5f5fca5d1969a067ef1cb18b282fe1cb2211ec0e6ccbbceb01ecee923533208";
+    //   ★ 原值是抓包得到的过期样例（已失效）；为免公开无效样例，该常量**已占位化**（等长 0 串），
+    //     真实票据一律不入库（本地私有实现生成）。
+    public const string YspTicket = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
     // ★ 认证签名盐 (官方 chunk-vendors.js 的 su() 所用, 生产环境)
     //   su 源码: e = sorted(appid,guid,pid,rand_str) 拼接 + Ac;  return md5(e)

@@ -39,11 +39,11 @@ First-run notes:
 | Desktop playback core | Web player (`hls.js`) inside WebView2 | **Native LibVLC** (bundled `libvlc\`, pruned plugins) |
 | External dependency | System **WebView2 Runtime** | **None** (VLC ships in the archive) |
 | Decryption | In-page wasm (`cmg.slim.js` / `hls.cmg.js` / `eb_prog.bin` / `reloc_table.bin`) | **Native C**: CMG kernel inside `PalmTVCore.dll` |
-| Signing / ticket / cKey | Page JS + wasm + in-process V8 | **All native C** (`ysp_*`; cKey = home-grown AES-128-CBC) |
+| Signing / ticket / cKey | Page JS + wasm + in-process V8 | **All native C** (inside `PalmTVCore.dll`; cKey = home-grown AES-128-CBC) |
 | JS engine | ClearScript.V8 + page injection | **Removed entirely** (no JS engine, no injection) |
 | Package entries | exe + `proxy.exe` + `player.served.html` + `sapi_cache\` (4 files) + icon | exe + `proxy.exe` + `PalmTVCore.dll` + `libvlc\` + `logos.dat` |
 | Package size | 61.4 MB | **95.1 MB** |
-| Channels | 55 (CMG/ysp only) | **79** = 55 + 9 Jiangsu + 15 IPTV locals |
+| Channels | 55 | **79** = 55 + 24 IPTV locals (extensible) |
 | Logos | Text-only tiles | **79 packed logos** (`logos.dat`, extracted to the user cache at runtime) |
 | New capabilities | — | First-run disclaimer, About page, **custom IPTV sources**, stream pre-checks with no-signal fallback, EPG improvements |
 
@@ -201,7 +201,7 @@ This repository is the **application shell**: it is readable and useful as a cli
 | Component | Location | Notes |
 |---|---|---|
 | Desktop player page | `desktop/player.html` | Page-side media-request rewriting, playback control, injection |
-| Desktop ticket generation | `desktop/gen_yspticket.cjs` | Plus `desktop/legacy/` (historical implementation) |
+| Desktop ticket generation | local private script under `desktop/` (see `.gitignore`) | Plus `desktop/legacy/` (historical implementation) |
 | Desktop local service | `proxy/main.go` | Go proxy and hosting logic |
 | HarmonyOS native build script | `harmony/entry/src/main/cpp/CMakeLists.txt` | Produces `libcmg_napi.so` |
 | HarmonyOS native kernel | — | Must implement every API declared in `index.d.ts` |
@@ -213,7 +213,7 @@ This repository is the **application shell**: it is readable and useful as a cli
 > All missing files are listed in `.gitignore`; they exist locally for development and are simply not distributed.
 
 > ★ Also note: the **1.1.8 native implementation is not in this repository either** — `PalmTVCore.dll`
-> (CMG decryption kernel + ysp signing/ticket/cKey), the VLC integration, the `logos.dat` logo-packing pipeline,
+> (CMG decryption kernel + signing/ticket/cKey), the VLC integration, the `logos.dat` logo-packing pipeline,
 > and features such as custom IPTV sources / first-run disclaimer / About page have not been synced here.
 
 ---

@@ -36,7 +36,7 @@
 | 桌面播放内核 | WebView2 内的 Web 播放器（`hls.js`） | **原生 LibVLC**（自带 `libvlc\`，插件已裁剪） |
 | 外部依赖 | 需系统 **WebView2 Runtime** | **无**（VLC 随包） |
 | 解密 | 页内 wasm（`cmg.slim.js` / `hls.cmg.js` / `eb_prog.bin` / `reloc_table.bin`） | **原生 C**：`PalmTVCore.dll` 里的 CMG 解密核 |
-| 签名 / 票据 / cKey | 页面 JS + wasm + 进程内 V8 | **全部原生 C**（`ysp_*`；cKey = 自实现 AES-128-CBC） |
+| 签名 / 票据 / cKey | 页面 JS + wasm + 进程内 V8 | **全部原生 C**（随 `PalmTVCore.dll` 一起；cKey = 自实现 AES-128-CBC） |
 | JS 引擎 | ClearScript.V8 + 页面注入 | **彻底移除**（无 JS 引擎、无页面注入） |
 | 包内条目 | exe + `proxy.exe` + `player.served.html` + `sapi_cache\`(4 个) + 图标 | exe + `proxy.exe` + `PalmTVCore.dll` + `libvlc\` + `logos.dat` |
 | 包大小 | 61.4 MB | **95.1 MB** |
@@ -193,7 +193,7 @@ dotnet publish -c Release
 | 组件 | 位置 | 说明 |
 |---|---|---|
 | 桌面侧播放页 | `desktop/player.html` | Web 播放器页面（媒体请求改写、播放控制、页面侧注入） |
-| 桌面侧设备票据生成 | `desktop/gen_yspticket.cjs` | 与 `desktop/legacy/`（历史实现） |
+| 桌面侧设备票据生成 | `desktop/` 下的本地私有脚本（见 `.gitignore`） | 与 `desktop/legacy/`（历史实现） |
 | 桌面侧本地服务实现 | `proxy/main.go` | Go 反代与托管逻辑 |
 | 鸿蒙侧 native 构建脚本 | `harmony/entry/src/main/cpp/CMakeLists.txt` | 产出 `libcmg_napi.so` |
 | 鸿蒙侧 native 内核源码 | — | 实现 `index.d.ts` 里声明的全部接口 |
@@ -204,7 +204,7 @@ dotnet publish -c Release
 
 > 缺失文件均已写入 `.gitignore`，本地开发时它们照常存在，只是不随仓库分发。
 
-> ★ 另外：**1.1.8 的原生实现同样不在此仓库** —— `PalmTVCore.dll`（CMG 解密核 + ysp 签名/票据/cKey）、
+> ★ 另外：**1.1.8 的原生实现同样不在此仓库** —— `PalmTVCore.dll`（CMG 解密核 + 签名/票据/cKey）、
 > VLC 集成、`logos.dat` 台标打包链路，以及"自定义 IPTV 源 / 免责声明 / 关于页"等改动都未同步进来。
 
 ---

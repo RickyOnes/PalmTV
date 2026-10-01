@@ -40,7 +40,7 @@
 | JS 引擎 | ClearScript.V8 + 页面注入 | **彻底移除**（无 JS 引擎、无页面注入） |
 | 包内条目 | exe + `proxy.exe` + `player.served.html` + `sapi_cache\`(4 个) + 图标 | exe + `proxy.exe` + `PalmTVCore.dll` + `libvlc\` + `logos.dat` |
 | 包大小 | 61.4 MB | **95.1 MB** |
-| 频道数 | 55（央视频） | **79** = 55 央视频 + 9 江苏台 + 15 IPTV 地方台 |
+| 频道数 | 55（央卫视） | **79** = 55 央卫视 + 24 IPTV 地方台（可扩展） |
 | 台标 | 文字瓷砖 | **79 张打包台标**（`logos.dat`，运行期解到用户缓存） |
 | 新增能力 | — | 首启免责声明、关于页、**自定义 IPTV 源**、取流预检与无信号回退、EPG 改进 |
 

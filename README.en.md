@@ -36,7 +36,17 @@ The latest runnable builds are on the **Releases** page: <https://github.com/Ric
 | How to run | Download the APK → install (the system will ask to allow installing unknown apps) → open |
 
 > The Android edition **ships as a package only**: its source code is not in this repository (see §1).
-> The HarmonyOS edition has no pre-built package — open `harmony/` in DevEco Studio and build it yourself (§4).
+
+**HarmonyOS edition** — distributed through **Huawei AppGallery "internal testing"** (no offline package)
+
+HarmonyOS packages must be signed and authorised by Huawei, so **a directly distributed file cannot be installed**.
+That is why this edition is released through AppGallery's **internal testing** channel. If you would like to try it,
+please **leave your Huawei account** (email is preferred: **162004332@qq.com**, subject "HarmonyOS internal test";
+you can also open an issue in this repository to describe your need) and I will add it to the internal-testing list —
+afterwards you will find and install the app under **AppGallery → Me → Internal testing**.
+
+> ⚠️ **A Huawei account is personal information — please do not post it in a public issue or comment**;
+> send it by email or direct message instead. You can also build it yourself in DevEco Studio (§4).
 
 First-run notes:
 
@@ -227,6 +237,9 @@ dotnet publish -c Release
 ### HarmonyOS
 
 Open `harmony/` in DevEco Studio — see [`harmony/README.md`](./harmony/README.md).
+
+> You do not need to build it just to *use* it: see the HarmonyOS note under "Download" above
+> (leave a Huawei account and it will be added to the internal test).
 
 1. Project Structure → Signing Configs → enable **Automatically generate signature**.
    Automatic signing only writes the `signingConfigs` array and does **not** add `products[*].signingConfig`

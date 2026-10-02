@@ -1,34 +1,67 @@
-# PalmTV — A Cross-Platform Live TV Player
+# PalmTV — A Three-Edition Live TV Player
 
 > **Desktop edition** (C# / WPF; **native LibVLC since v1.1.8**) + **HarmonyOS edition** (ArkTS / native AVPlayer)
+> + **Android edition** (Kotlin / Jetpack Compose; **new in v1.2.0**)
 >
-> An engineering project that turns the whole chain of *channel list → stream resolution → local relay → playback*
-> into a clean, long-running, uninterrupted player. The two editions share
-> the same stream-orchestration approach while using **completely different playback internals**.
+> An engineering project that turns the whole chain of *channel list → stream resolution → decryption → playback*
+> into a clean, long-running, uninterrupted player. The three editions share the same stream-orchestration
+> approach and the same channel list, while using **completely different playback internals**.
 
 ---
 
-## 📦 Download (Windows x64 desktop build — unzip and run)
+## 📦 Download
 
-The latest runnable build is on the **Releases** page: <https://github.com/RickyOnes/PalmTV/releases/latest>
+The latest runnable builds are on the **Releases** page: <https://github.com/RickyOnes/PalmTV/releases/latest>
+
+**Windows x64 desktop build** (unzip and run)
 
 | Item | Value |
 |---|---|
-| Version | **v1.1.8** (2026-09-30) |
-| Asset | `PalmTV-v1.1.8-win-x64.zip` |
-| Size | 95.1 MB (99,757,878 bytes) |
-| SHA-256 | `85EDBDCA5C29FB7AD3C84CF0F6FBE522B09136DDC671C77A2F93CF1BFF3F7934` |
+| Version | **v1.2.0** (2026-10-02) |
+| Asset | `PalmTV-v1.2.0-win-x64.zip` |
+| Size | 95.2 MB (99,832,618 bytes) |
+| SHA-256 | `3B10911530A7BD4ED35D3DC9852C57370D7ED0A4552FDB876E0E517DF329449D` |
 | Requirements | Windows 10 / 11 x64; **no WebView2 Runtime needed** (VLC is bundled) |
 | How to run | Unzip anywhere → double-click `WinPalmTV.exe` |
+
+**Android build** (install the APK directly)
+
+| Item | Value |
+|---|---|
+| Version | **v1.2.0** (2026-10-02) |
+| Asset | `PalmTV-v1.2.0-android.apk` |
+| Size | 16.0 MB (16,737,316 bytes) |
+| SHA-256 | `3A0E0172904D59B38B1E35D6F91AB9B26A4636195F4C256BC437A854BFE9A788` |
+| Requirements | Android 7.0+ (arm64 phones) |
+| How to run | Download the APK → install (the system will ask to allow installing unknown apps) → open |
+
+> The Android edition **ships as a package only**: its source code is not in this repository (see §1).
+> The HarmonyOS edition has no pre-built package — open `harmony/` in DevEco Studio and build it yourself (§4).
 
 First-run notes:
 
 - **The first launch takes a little longer** (a few seconds): the first run initialises the runtime and unpacks the
   bundled assets (channel logos, etc.) into a local cache. Later launches are fast; upgrading the app or unzipping
   it into a new folder makes one more launch slower.
-- Logo cache, custom IPTV sources and the disclaimer state are stored in `%LOCALAPPDATA%\WinPalmTV\`
-  and survive upgrades or moving the folder.
-- Custom IPTV sources: About page → "Add / edit custom sources…".
+- Logo cache, custom IPTV sources and the disclaimer state **survive upgrades**
+  (`%LOCALAPPDATA%\WinPalmTV\` on the desktop edition, the app's own data directory on Android).
+- Custom IPTV sources: About page → "Add / edit custom sources…" (on Android: "Technical notes" item 4 → "Add / edit").
+
+---
+
+## 🆕 Version evolution: v1.1.8 → v1.2.0 (this release)
+
+| | **v1.1.8** (2026-09-30) | **v1.2.0** (2026-10-02) |
+|---|---|---|
+| Editions | Desktop + HarmonyOS | **Desktop + HarmonyOS + Android** |
+| Android edition | — | **New**: Kotlin + Jetpack Compose UI, Media3 playback core; system media card (notification / lock screen / headset buttons); portrait channel wall and landscape fullscreen |
+| App name / icon | Named separately per edition | Unified as "**掌上电视**" across all three editions, icons and credits aligned |
+| Version number | 1.1.8 | Unified **1.2.0** across all three editions |
+| Audio | HarmonyOS already mixed with other apps | **All three editions mix instead of taking exclusive focus**: playing this app no longer silences or interrupts other apps |
+| Text-only logos | First character of the channel name | **Full channel name** (one shared sizing rule, up to two lines, then ellipsis) |
+| Custom IPTV sources | Editable on desktop; added to the other editions later | One shared m3u format + **paste m3u text to import** + numbered list with click-to-edit + buttons colour-coded by role (primary / secondary / delete) + a receipt after every action |
+| No-signal handling | Inconsistent timings across editions | Unified: 6 s source pre-check, 15 s without a picture marks a direct channel as no-signal; the fallback notice **names the channel the user actually picked** |
+| Package size | Desktop 95.1 MB | Desktop **95.2 MB** / Android **16.0 MB** |
 
 ---
 
@@ -64,31 +97,34 @@ failures; the 1.5 MB pre-baked player page and the four injected assets are gone
 
 ---
 
-## 1. The source in this repo is a **v1.1.0-era public snapshot**
+## 1. The source in this repo is a **v1.1.0-era public snapshot** (Android source is not included)
 
 > ⚠️ Read this first: `desktop/`, `proxy/` and `harmony/` here are the **"application shell" snapshot from v1.1.0**
-> (WebView2 + wasm architecture). It is **not the same implementation** as the 1.1.8 build on the Releases page —
-> the 1.1.8 native kernel (`PalmTVCore.dll`) and the related rewrites **are not synced into this repository**.
-> Treat this repo as a **client-architecture reference**, not as "clone and build 1.1.8".
+> (WebView2 + wasm architecture). It is **not the same implementation** as the 1.1.8 / 1.2.0 builds on the
+> Releases page — the 1.1.8 native kernel (`PalmTVCore.dll`) and the related rewrites **are not synced here**.
+>
+> ★★ The **Android edition (new in v1.2.0) ships as a package only** — its source code is not in this repository.
+> Treat this repo as a **client-architecture reference**, not as "clone and build 1.2.0".
 
-|  | **Desktop** — `desktop/` (snapshot) | **HarmonyOS** — `harmony/` |
-|---|---|---|
-| Platform | Windows 10/11 (x64) | HarmonyOS NEXT |
-| UI | C# / WPF | ArkTS / ArkUI |
-| Playback core | Web player (`hls.js`) inside WebView2 | **Native AVPlayer** + `XComponent(SURFACE)` |
-| Media processing | JavaScript inside the page | **Native N-API module** (`libcmg_napi.so`) |
-| Local relay | Go reverse proxy on `127.0.0.1:18888` | ArkTS local HTTP service on `127.0.0.1:18899` |
-| Request signing | `desktop/PlayerService.cs` | `harmony/.../common/NativeSigner.ets` |
-| Status | Works (bring your own components, see §5) | Works (same) |
+|  | **Desktop** — `desktop/` (snapshot) | **HarmonyOS** — `harmony/` (snapshot) | **Android** — source not in this repo |
+|---|---|---|---|
+| Platform | Windows 10/11 (x64) | HarmonyOS NEXT | Android 7.0+ (arm64) |
+| UI | C# / WPF | ArkTS / ArkUI | Kotlin / Jetpack Compose |
+| Playback core | Web player (`hls.js`) inside WebView2 | **Native AVPlayer** + `XComponent(SURFACE)` | **Media3 (ExoPlayer)** |
+| Media processing | JavaScript inside the page | **Native N-API module** (`libcmg_napi.so`) | In-app native (JNI); the player fetches and decrypts on the fly |
+| Local relay | Go reverse proxy on `127.0.0.1:18888` | ArkTS local HTTP service on `127.0.0.1:18899` | **None** (decryption happens in the data source layer; the player only sees playable data) |
+| Request signing | `desktop/PlayerService.cs` | `harmony/.../common/NativeSigner.ets` | Same approach as desktop / HarmonyOS |
+| Status | Works (bring your own components, see §5) | Works (same) | **Package only** (APK on the Releases page) |
 
-**Shared capabilities**
+**Shared capabilities in the current release (v1.2.0)**
 
-- **55 live channels** built in (including 4K / 8K slots), channel grid with groups
+- **79 live channels** built in (55 + 24 IPTV locals, extensible), channel grid with groups
 - **EPG**: scrolling "now / next" in the status bar, full-day list in a popup
 - **Gestures**: left half adjusts brightness, right half adjusts volume
 - **Playback state machine**: first-play watchdog, error self-healing (re-resolve / rebuild player), zero rebuild in background
-- **System media card** with title and artwork (native `AVSession` on HarmonyOS)
-- **Audio focus**: interruption handling for calls / other apps; focus released when backgrounded
+- **System media card** with title and artwork (native `AVSession` on HarmonyOS, a Media3 session on Android)
+- **Audio**: mixed with other apps (never exclusive, never interrupting them)
+- **Custom IPTV sources**: one shared m3u format, paste-to-import on every edition
 - **Foreground/background policy**: no downloading or processing in background, resume on demand, stale-session recovery
 - Keep-screen-on, mute/volume persistence, fullscreen and lock controls, prefetch on channel switch
 
@@ -96,7 +132,7 @@ failures; the 1.5 MB pre-baked player page and the four injected assets are gone
 
 ## 2. Architecture (v1.1.0 snapshot)
 
-Both editions follow one idea: **the player only ever sees data it can play directly.**
+All three editions follow one idea: **the player only ever sees data it can play directly.**
 
 ```
        Upstream playlist (contains a one-shot token)
@@ -121,6 +157,9 @@ Both editions follow one idea: **the player only ever sees data it can play dire
   (★ 1.1.8 plays with native LibVLC instead — no player page, no injection; see "Version evolution" above.)
 - **HarmonyOS**: native AVPlayer plus an ArkTS local service. Media processing happens in native code and is
   serialized on a worker thread, so the JS thread is never blocked.
+- **Android (v1.2.0)**: Media3 (ExoPlayer) plus a custom data source — decryption happens in the data source
+  layer, so there is **no local relay service** (no `127.0.0.1` port as above). Its source code is not part of
+  this repository; this line only describes where it sits in the architecture.
 
 ---
 
@@ -158,6 +197,9 @@ PalmTV/
 └─ LICENSE
 ```
 
+> The Android edition's source code is not in this repository, so there is no matching entry above
+> (it ships as a package only).
+
 ---
 
 ## 4. Build (v1.1.0 snapshot)
@@ -191,6 +233,11 @@ Open `harmony/` in DevEco Studio — see [`harmony/README.md`](./harmony/README.
    (already added in this project).
 2. Sync and Refresh Project → Build Hap(s); verify the artifact is `entry-default-signed.hap`.
 
+### Android
+
+The source is not part of this repository, so no build instructions are provided; a **ready-to-install package**
+is published on the Releases page (see "Download" above).
+
 ---
 
 ## 5. What is not included
@@ -212,9 +259,12 @@ This repository is the **application shell**: it is readable and useful as a cli
 
 > All missing files are listed in `.gitignore`; they exist locally for development and are simply not distributed.
 
-> ★ Also note: the **1.1.8 native implementation is not in this repository either** — `PalmTVCore.dll`
+> ★ Also note: the **1.1.8 / 1.2.0 native implementation is not in this repository either** — `PalmTVCore.dll`
 > (CMG decryption kernel + signing/ticket/cKey), the VLC integration, the `logos.dat` logo-packing pipeline,
 > and features such as custom IPTV sources / first-run disclaimer / About page have not been synced here.
+>
+> ★★ The **Android edition (new in v1.2.0) is not in this repository at all** — there is no `Android/` directory
+> and no stream-resolution / decryption code for it. It is published as a **package (APK)** only.
 
 ---
 
@@ -224,6 +274,7 @@ This repository is the **application shell**: it is readable and useful as a cli
 |---|---|
 | Desktop | `player-debug.log` (page `postMessage`) and `proxy.log` (Go process) in the run directory |
 | HarmonyOS | hilog; filter by tag in the DevEco Log window |
+| Android | system log (`adb logcat`, filter by the app's package name) |
 
 Suggested order: verify the local service is listening → verify the player received a playlist → only then inspect
 the media module's statistics.

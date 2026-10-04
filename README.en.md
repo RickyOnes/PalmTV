@@ -30,9 +30,9 @@ The latest runnable builds are on the **Releases** page: <https://github.com/Ric
 |---|---|
 | Version | **v1.2.0** (2026-10-04) |
 | Asset | `PalmTV-v1.2.0-android.apk` |
-| Size | 16.0 MB (16,787,492 bytes) |
-| SHA-256 | `BA73E2B69B115BE93860A66F1989EDA3E8FA62966D91A70C20FC089AF824D2A9` |
-| Requirements | **Android 7.0+**: phones (arm64 / x86_64) **and Android TV / TV boxes** |
+| Size | 16.5 MB (17,262,792 bytes) |
+| SHA-256 | `AC730BCBA010BC164779E7AF778DE7C864A89BD8574024A40D34CD0DD717D7C0` |
+| Requirements | **Android 7.0+**; installs on **phones, Android TV / TV boxes — including 32-bit TV systems** (the package ships `arm64-v8a` / `armeabi-v7a` / `x86_64`) |
 | How to run | Download the APK → install (the system will ask to allow installing unknown apps) → open |
 
 > **One package for phones and TVs**: on an Android TV / TV box it **switches to a remote-control UI**

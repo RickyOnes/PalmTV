@@ -30,8 +30,8 @@ The latest runnable builds are on the **Releases** page: <https://github.com/Ric
 |---|---|
 | Version | **v1.2.0** (2026-10-04) |
 | Asset | `PalmTV-v1.2.0-android.apk` |
-| Size | 16.0 MB (16,771,108 bytes) |
-| SHA-256 | `44EFBC0A92D88BD47C9D1D95038467C7E5A40928CA3AA853FEF8C0E86AF3F110` |
+| Size | 16.0 MB (16,787,492 bytes) |
+| SHA-256 | `BA73E2B69B115BE93860A66F1989EDA3E8FA62966D91A70C20FC089AF824D2A9` |
 | Requirements | **Android 7.0+**: phones (arm64 / x86_64) **and Android TV / TV boxes** |
 | How to run | Download the APK → install (the system will ask to allow installing unknown apps) → open |
 
@@ -42,6 +42,10 @@ The latest runnable builds are on the **Releases** page: <https://github.com/Ric
 > is not available on TV** (typing with a remote is painful — edit on the phone or desktop edition; the m3u list
 > format is shared). Also: **use your TV remote for volume** — the app has no in-app volume control, which is the
 > convention for TV apps.
+>
+> On TV you also get: **a channel starts automatically on launch** (it resumes the last channel you watched,
+> or CCTV-1 if there is no record), focus initially lands on **the channel being played**, and a
+> **programme (EPG) popup** (move focus to the "on now" strip and press OK; D-pad to scroll, OK / Back to close).
 
 > The Android edition **ships as a package only**: its source code is not in this repository (see §1).
 

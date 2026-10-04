@@ -24,16 +24,24 @@ The latest runnable builds are on the **Releases** page: <https://github.com/Ric
 | Requirements | Windows 10 / 11 x64; **no WebView2 Runtime needed** (VLC is bundled) |
 | How to run | Unzip anywhere → double-click `WinPalmTV.exe` |
 
-**Android build** (install the APK directly)
+**Android build** (install the APK directly — **the same package runs on phones and TVs**)
 
 | Item | Value |
 |---|---|
-| Version | **v1.2.0** (2026-10-02) |
+| Version | **v1.2.0** (2026-10-04) |
 | Asset | `PalmTV-v1.2.0-android.apk` |
-| Size | 16.0 MB (16,737,316 bytes) |
-| SHA-256 | `3A0E0172904D59B38B1E35D6F91AB9B26A4636195F4C256BC437A854BFE9A788` |
-| Requirements | Android 7.0+ (arm64 phones) |
+| Size | 16.0 MB (16,771,108 bytes) |
+| SHA-256 | `44EFBC0A92D88BD47C9D1D95038467C7E5A40928CA3AA853FEF8C0E86AF3F110` |
+| Requirements | **Android 7.0+**: phones (arm64 / x86_64) **and Android TV / TV boxes** |
 | How to run | Download the APK → install (the system will ask to allow installing unknown apps) → open |
+
+> **One package for phones and TVs**: on an Android TV / TV box it **switches to a remote-control UI**
+> automatically — D-pad to move, OK to confirm, channel ± on the remote to zap, Back to exit; video on the left,
+> channel list on the right, and the fullscreen control bar **auto-hides after 4 seconds**. Phones keep the
+> touch/gesture UI. Everything works the same on both; the only difference is that **editing custom IPTV sources
+> is not available on TV** (typing with a remote is painful — edit on the phone or desktop edition; the m3u list
+> format is shared). Also: **use your TV remote for volume** — the app has no in-app volume control, which is the
+> convention for TV apps.
 
 > The Android edition **ships as a package only**: its source code is not in this repository (see §1).
 
@@ -65,6 +73,7 @@ First-run notes:
 |---|---|---|
 | Editions | Desktop + HarmonyOS | **Desktop + HarmonyOS + Android** |
 | Android edition | — | **New**: Kotlin + Jetpack Compose UI, Media3 playback core; system media card (notification / lock screen / headset buttons); portrait channel wall and landscape fullscreen |
+| **Android TV** | — | **The same Android package also supports Android TV / TV boxes** (auto-detected): a **remote-control UI** on TV — D-pad focus, OK to confirm, channel ± to zap, Back to exit; video left / channel list right; fullscreen control bar **auto-hides after 4 s** (any D-pad key brings it back); volume stays with the TV remote (no in-app volume) |
 | App name / icon | Named separately per edition | Unified as "**掌上电视**" across all three editions, icons and credits aligned |
 | Version number | 1.1.8 | Unified **1.2.0** across all three editions |
 | Audio | HarmonyOS already mixed with other apps | **All three editions mix instead of taking exclusive focus**: playing this app no longer silences or interrupts other apps |
@@ -118,8 +127,8 @@ failures; the 1.5 MB pre-baked player page and the four injected assets are gone
 
 |  | **Desktop** — `desktop/` (snapshot) | **HarmonyOS** — `harmony/` (snapshot) | **Android** — source not in this repo |
 |---|---|---|---|
-| Platform | Windows 10/11 (x64) | HarmonyOS NEXT | Android 7.0+ (arm64) |
-| UI | C# / WPF | ArkTS / ArkUI | Kotlin / Jetpack Compose |
+| Platform | Windows 10/11 (x64) | HarmonyOS NEXT | Android 7.0+ (phones / Android TV / TV boxes) |
+| UI | C# / WPF | ArkTS / ArkUI | Kotlin / Jetpack Compose (remote-control UI on TV) |
 | Playback core | Web player (`hls.js`) inside WebView2 | **Native AVPlayer** + `XComponent(SURFACE)` | **Media3 (ExoPlayer)** |
 | Media processing | JavaScript inside the page | **Native N-API module** (`libcmg_napi.so`) | In-app native (JNI); the player fetches and decrypts on the fly |
 | Local relay | Go reverse proxy on `127.0.0.1:18888` | ArkTS local HTTP service on `127.0.0.1:18899` | **None** (decryption happens in the data source layer; the player only sees playable data) |

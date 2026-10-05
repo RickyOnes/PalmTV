@@ -30,7 +30,7 @@
 | 版本 | **v1.2.0**（2026-10-04） |
 | 资产 | `PalmTV-v1.2.0-android.apk` |
 | 大小 | 16.5 MB（17,263,276 B） |
-| SHA-256 | `A1F43A0DA5DE0CFB6ABEE028A8B0AD343226DDF45C4A2F19DD45ECEF0BE38EAE` |
+| SHA-256 | `16AAAA31BA49551BA90A823A997411D7B47C086C05974DCAE4FFCEABB2ABFAA9` |
 | 系统要求 | **Android 7.0 及以上**；**手机、Android TV / 电视盒子都能装**（含 **32 位系统的电视**，如创维/酷开 —— 安装包同时带 `arm64-v8a` / `armeabi-v7a` / `x86_64`） |
 | 用法 | 下载 APK → 安装（首次系统会提示"允许安装未知应用"，按提示允许即可）→ 打开即用 |
 

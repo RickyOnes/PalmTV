@@ -30,22 +30,25 @@ The latest runnable builds are on the **Releases** page: <https://github.com/Ric
 |---|---|
 | Version | **v1.2.0** (2026-10-04) |
 | Asset | `PalmTV-v1.2.0-android.apk` |
-| Size | 16.5 MB (17,262,792 bytes) |
-| SHA-256 | `AC730BCBA010BC164779E7AF778DE7C864A89BD8574024A40D34CD0DD717D7C0` |
+| Size | 16.5 MB (17,263,276 bytes) |
+| SHA-256 | `A1F43A0DA5DE0CFB6ABEE028A8B0AD343226DDF45C4A2F19DD45ECEF0BE38EAE` |
 | Requirements | **Android 7.0+**; installs on **phones, Android TV / TV boxes — including 32-bit TV systems** (the package ships `arm64-v8a` / `armeabi-v7a` / `x86_64`) |
 | How to run | Download the APK → install (the system will ask to allow installing unknown apps) → open |
 
 > **One package for phones and TVs**: on an Android TV / TV box it **switches to a remote-control UI**
 > automatically — D-pad to move, OK to confirm, channel ± on the remote to zap, Back to exit; video on the left,
-> channel list on the right, and the fullscreen control bar **auto-hides after 4 seconds**. Phones keep the
-> touch/gesture UI. Everything works the same on both; the only difference is that **editing custom IPTV sources
-> is not available on TV** (typing with a remote is painful — edit on the phone or desktop edition; the m3u list
-> format is shared). Also: **use your TV remote for volume** — the app has no in-app volume control, which is the
-> convention for TV apps.
+> channel list on the right. Phones keep the touch/gesture UI. Everything works the same on both; the only
+> difference is that **editing custom IPTV sources is not available on TV** (typing with a remote is painful —
+> edit on the phone or desktop edition; the m3u list format is shared). Also: **use your TV remote for volume** —
+> the app has no in-app volume control, which is the convention for TV apps.
 >
-> On TV you also get: **a channel starts automatically on launch** (it resumes the last channel you watched,
-> or CCTV-1 if there is no record), focus initially lands on **the channel being played**, and a
-> **programme (EPG) popup** (move focus to the "on now" strip and press OK; D-pad to scroll, OK / Back to close).
+> How it works on TV: **a channel starts playing automatically on launch** (it resumes the last one watched,
+> or CCTV-1 if there is no record); **8 seconds after the picture actually starts**, being idle **switches to
+> fullscreen**; in fullscreen **OK exits fullscreen directly** and **Up / Down zap channels**, while the control
+> bar auto-hides after 4 seconds (any D-pad key brings it back); **after leaving fullscreen, focus lands on the
+> channel being played**; move focus to the "on now" strip and press OK for the **programme (EPG) popup**
+> (D-pad to scroll, OK / Back to close); press the remote's **Menu** key to toggle an on-screen **diagnostics
+> overlay** (resolve time / decryption rate / bitrate / buffer).
 
 > The Android edition **ships as a package only**: its source code is not in this repository (see §1).
 

@@ -1,0 +1,47 @@
+<Window x:Class="PalmTVDesktop.DisclaimerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="内容来源与免责声明"
+        Height="470" Width="600" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{StaticResource BgColor}"
+        Foreground="{StaticResource TextColor}"
+        FontSize="12">
+    <!--
+      ★ 2026-09-29：首启「内容来源与免责声明」弹窗（与鸿蒙端 `Index.disclaimerModal()` 同口径）。
+        正文来源 = `MainWindow.DisclaimerText`（**单一来源**，与鸿蒙 `DISCLAIMER_TEXT` 必须一致）；
+        同意状态 = `%LOCALAPPDATA%\WinPalmTV\disclaimer.txt` 里记的声明版本号（改版号 ⇒ 老用户再弹一次）。
+    -->
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="内容来源与免责声明" FontSize="17" FontWeight="SemiBold"/>
+
+        <Border Grid.Row="1" Margin="0,12,0,10" Padding="12,10"
+                Background="{StaticResource PanelColor}" CornerRadius="4">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <TextBlock x:Name="TextBody" TextWrapping="Wrap" LineHeight="20"
+                           Foreground="{StaticResource TextColor}"/>
+            </ScrollViewer>
+        </Border>
+
+        <TextBlock Grid.Row="2" x:Name="ContactText" Margin="0,0,0,12" FontSize="12"
+                   Foreground="#8AB4FF"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="BtnRefuse" Content="不同意（退出）" Width="130" Height="32"
+                    Margin="0,0,10,0" Style="{StaticResource CtrlBtnStyle}"
+                    Click="Refuse_Click"/>
+            <Button x:Name="BtnAgree" Content="我已阅读并同意" Width="150" Height="32"
+                    Style="{StaticResource CtrlBtnStyle}"
+                    Background="{StaticResource AccentColor}" Click="Agree_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

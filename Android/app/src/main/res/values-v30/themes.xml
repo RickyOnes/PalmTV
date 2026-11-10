@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ★★ 2026-10-01 修 bug（用户实测："全屏播放时左右黑边宽度不一致、画面没居中"）★★
+         `android:windowLayoutInDisplayCutoutMode = always`：
+           默认模式（default）下，**横屏时挖孔在长边（左/右侧）**，系统会把整个窗口往里缩以避开挖孔
+           ⇒ 只缩一侧 ⇒ 无论 Compose 怎么居中，屏幕上看到的就是"左右黑边不等宽"。
+           `always` = 允许窗口**在所有方向**都延伸到挖孔区（API 30+）⇒ 窗口 = 整屏 ⇒ 画面真正居中。
+         ⚠️ 非全屏时我们仍然用 `Modifier.safeDrawingPadding()` 把内容避到安全区（cutout inset 也算在内），
+            所以这个放行不会让控件被挖孔压住；只有**全屏**时才是"整屏铺满"。
+         ⚠️ 顺带：放行后横屏的状态栏才有地方可画（挖孔区），这也是用户反馈"横屏看不到时间/电量"的一个前提。 -->
+    <style name="Theme.PalmTV" parent="Theme.PalmTV.Base">
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+    </style>
+</resources>

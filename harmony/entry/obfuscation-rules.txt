@@ -1,65 +1,118 @@
-# Define project specific obfuscation rules here.
-# You can include the obfuscation configuration files in the current module's build-profile.json5.
+# ============================================================================
+# PalmTV release 混淆规则（2026-09-17 重写）
 #
-# For more details, see
-#   https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/source-obfuscation
+# ★ 本文件在 release 构建生效：
+#     entry/build-profile.json5 → buildOptionSet[release]
+#       → arkOptions.obfuscation.ruleOptions.enable = true
+#       → files: ["./obfuscation-rules.txt"]
+#   debug 构建**不**做混淆（所以调试包一直正常、问题只在 release 才暴露）。
 #
-# ★ 本工程 release 构建已启用混淆（entry/build-profile.json5 → buildOptionSet[release]
-#   → arkOptions.obfuscation.ruleOptions.enable = true）。下面的 keep 名单是本项目
-#   「ArkWeb 播放壳」架构下的硬性要求，删除任一条都会导致运行时静默失效。
+# ★★ 为什么必须有下面的 keep 名单（血泪）★★
+#   本工程大量依赖「**名字契约**」：ArkTS 侧用点号访问的属性名，
+#   native 侧（libpalmtv_napi.so）是用**字符串**注册的同一个名字。
+#   属性混淆会把这些属性名改短（如 jstvSignQuery → y58），而 native 只认原名
+#   ⇒ release 包在真机上会变成 `undefined is not a function` / 读到的字段全是 undefined。
+#
+#   2026-11-07 之前踩过的实例（旧规则下 release 产物的 nameCache）：
+#     "cmgInit": "y58"   "cmgDecryptTsAsync": "j59"   "yspSignInit": "x65"   "lastMaPcs": "j63"
+#   ⇒ 当时把那些名字全部显式保留了；**CMG 与 Web/PC 签名已于 2026-11-07 移除**，
+#     现在只剩「自研 cKey + 江苏台签名」两组接口要保。
+# ============================================================================
 
-# Obfuscation options:
-# -disable-obfuscation: disable all obfuscations
-# -enable-property-obfuscation: obfuscate the property names
-# -enable-toplevel-obfuscation: obfuscate the names in the global scope
-# -compact: remove unnecessary blank spaces and all line feeds
-# -remove-log: remove all console.* statements
-# -print-namecache: print the name cache that contains the mapping from the old names to new names
-# -apply-namecache: reuse the given cache file
-
-# Keep options:
-# -keep-property-name: specifies property names that you want to keep
-# -keep-global-name: specifies names that you want to keep in the global scope
-
+# ---- 混淆开关（保持与原来一致：属性/顶层/文件名/导出 全开）----
 -enable-property-obfuscation
 -enable-toplevel-obfuscation
 -enable-filename-obfuscation
 -enable-export-obfuscation
 
-# ★ 不要加 -remove-log：本项目的播放链路诊断完全依赖 console.info（postMessage +
-#   [play]/[proxy]/[player-cmg] 前缀日志），删掉后线上问题无法定位。
+# ---- 删注释（2026-09-17 打开）----
+# 注释本身不会进 abc 的字符串表，但 JsDoc/声明注释可能随元数据保留 ⇒ 打开是**零成本保险**
+# （发布包里不该出现任何源码注释文本）。
+-remove-comments
+
+# ---- 日志：**不用 -remove-log**（2026-09-17 定稿）----
+# `-remove-log` 是"全删"：连 `console.error/warn` 一起删（且要求返回值未被使用），
+# 而我们要的是"发布包只留 warn/error" ⇒ 已改为在 App 侧用 `common/Log.ets` 按级别封装：
+#   Log.i(...)  release 下被 `BuildProfile.DEBUG=false` 静态折叠掉（连参数字符串一起摇掉）
+#   Log.w(...) / Log.e(...)  release 下照常输出（hilog tag `JSAPP`）
+# ⚠️ 因此：**不要再直接调用 console.***（新代码一律走 Log；否则 release 下会漏出 info 级日志）。
+# （2026-11-07 起 native 侧已无 hilog 输出：CMG 解密核连同它的 `cmg_log()` 一并移出鸿蒙构建）
 # -remove-log
 
-# ★ 可选：-compact（去掉空白与换行以减小体积）。风险低，但会让反混淆后的行号信息变差，
-#   定位线上崩溃时再开启即可。
+# ---- 体积：可选 ----
+# -compact 会去掉空白与换行 ⇒ 崩溃栈只剩行号（行号也失效）⇒ 排障期不要开。
 # -compact
 
-# ★ 可选：发布前建议临时加 -print-namecache 生成映射表并本地归档，
-#   后续还原崩溃栈时需要（每次构建必须换文件名，避免覆盖）。
-# -print-namecache ./namecache.json
+# ---- 崩溃符号化：发布前建议每版生成并归档（文件名带上版本号，别覆盖）----
+# -print-namecache ./namecache-1.0.0.json
 
-# ==================== 必须保留的属性名 ====================
-# 属性混淆只改「标识符形式」的属性名，不改字符串字面量 key 与下标访问（obj['x']）。
-# 只要两端中有一端是字符串（JS 侧 / 外部 Go 代理 / 下标读取），该名字就必须保留。
+# ============================================================================
+# 必须保留的属性名
+# ============================================================================
 
+# ① 系统化做法：保留 native 包声明文件里的**全部**名称
+#    （-keep-dts 会被展开成 -keep-global-name + -keep-property-name）
+#    ⚠️ 路径基准实测是**工程根**，不是本文件所在的 entry/：
+#       写成 ./src/main/... 时 hvigor 直接报
+#         ENOENT: no such file or directory, stat 'PalmTV\src\main\cpp\types\libpalmtv_napi'
+#       （2026-09-17 实测）⇒ **必须带 entry/ 前缀**。
+#    这里给**目录**（该目录下所有 .d.ts 都被保留），以后往 index.d.ts 里加新接口不必再改本文件。
+-keep-dts ./entry/src/main/cpp/types/libpalmtv_napi
+
+# ② 兜底：显式列出（防止 -keep-dts 在个别 SDK 版本上失效；改动代价为零）
 -keep-property-name
-# ArkWeb javaScriptProxy：Index.ets 注入对象 { onMsg: ... }，而 methodList: ['onMsg']
-# 与 player.html 的 window.__nativeBridge.onMsg(...) 都是字符串。改名即桥接断开，
-# 页面 postMessage 的 refresh/state/cmg/audio 消息全部丢失。
-onMsg
-# 本地代理 /sign 契约（ProxyClient.sign ↔ ArktsProxy.handleSign）：
-#   ProxyClient 用 JSON.stringify({ kind, fields, salt }) 发，ArktsProxy 用 parsed.kind
-#   点号读；两端同为标识符时内部仍自洽，但 External 联调模式（开发机 Go 代理 hmos_proxy）
-#   要求字段名固定为 kind/fields/salt。
-kind
-fields
-salt
-# /sign 响应字段：ArktsProxy 侧已改为字面量 key（{'sig': ...}），ProxyClient 侧是
-# obj['sig'] 下标读取。保留 sig 可防止将来有人改回 { sig: sig } 时静默出错。
-sig
+# --- libpalmtv_napi.so：自研 cKey（2026-11-07，安卓格式 TEA 链）---
+yspSelfGenCKey
+yspSelfVersion
+# --- libpalmtv_napi.so：ChinaDRM(sm4c) 8 个加密台的分片解密（2026-11-08）---
+yspSm4Decrypt
+yspSm4LastSlices
+yspSm4LastReason
+yspSm4Version
+# --- libpalmtv_napi.so：江苏台（荔枝 TV）取流签名（2026-09-19）---
+jstvSignQuery
+jstvTxTime
+jstvMd5Hex
+jstvSignVersion
+jstvSignLastError
 
-# ==================== 必须保留的全局名 ====================
-# 页面入口组件名。虽然路由表在文件名混淆时会同步更新，但显式保留可避免
-# loadContent('pages/Index') 在个别 SDK 版本上的匹配问题。
+# ============================================================================
+# 必须保留的全局名
+# ============================================================================
 -keep-global-name
+# 页面入口组件名：windowStage.loadContent('pages/Index') 依赖它
 Index
+
+# ============================================================================
+# 【已作废】官方 cKey 模块体 ckey_core.ts（webpack fb15）—— 2026-09-29 原生化后删除
+# ============================================================================
+# ckey_core.ts 是**官方混淆模块体**原样编译进来的（见 NativeSigner.ets 注释）：
+# 内部可能用 Object.defineProperty / Proxy 的**字符串 key** 定义属性、
+# 又用点号访问 ⇒ 属性混淆一旦只改一侧就会静默失效（cKey 为空 ⇒ 取流 20301）。
+# 它只占一个文件，整文件不混淆的代价极小，收益是确定性。
+#
+# ⚠️⚠️ 2026-09-17 实测：写成 `-keep ./entry/src/main/ets/common/ckey_core.ts`（工程根相对）**没生效**，
+#   而规则是**静默忽略**的（不报错）—— release 包里 ckey_core.ts 段的 IdentifierCache 仍被改名
+#   （`#CKEY_UA → i2`、`ckeyCompute#cnlid → j2`…），真机上表现为：
+#     点击频道 → `[YspSign] cKey 计算失败: Cannot load property of null or undefined`
+#     → `[Index] 取流失败(1/3…)` → 三次后 `playChannel 失败`，**完全无法播放**（但 debug 包正常）。
+#   ⇒ 该模块内部是"字符串 key 定义 + 点号访问"混用的自制实现，属性一被改名就静默取到 undefined。
+#
+# ★★ 路径基准（2026-09-17 逐条实测，本 SDK 版本上**两种规则的基准不一致**，极易踩）★★
+#   `-keep     ./src/main/ets/common/ckey_core.ts`  ← 基准 = **模块目录（entry/）** ✅ 已验证生效
+#   `-keep-dts ./entry/src/main/cpp/types/libcmg_napi` ← 基准 = **工程根**（少写 entry/ 会 ENOENT）
+#   ⇒ 写错基准**不会报错、只是静默不生效**，所以**改完必须核对** nameCache：
+#     `entry/src/main/ets/common/ckey_core.ts` 段的 `IdentifierCache`/`PropertyCache` 必须是 **空 `{}`**；
+#     顺带确认自有代码仍被改名（如 `"decTail": "t2"`）⇒ 证明混淆确实在跑、不是"整体没混淆"的假象。
+# ★★ 2026-09-29：`ckey_core.ts` **已删除**（cKey 改由 native 的 `ysp_gen_ckey` 计算，
+#    见 `NativeSigner.ets`）⇒ 本段 keep 规则一并作废，**不要再补回来**。
+#    下面这段历史保留：它记录了"为什么当年必须整文件不混淆"，也是"用 native 换掉 JS"的价值所在。
+# -keep ./src/main/ets/common/ckey_core.ts
+
+# ============================================================================
+# 历史遗留（已随 09-15 清理删除，勿再补）
+# ============================================================================
+# 早期 ArkWeb 播放壳 + Go 代理时代的字符串契约（onMsg / kind / fields / salt / sig）
+# 对应的代码（player.html、ArktsProxy、ProxyClient、CmgInject…）已全部删除，
+# 现在没有任何地方需要它们 ⇒ 已从 keep 名单移除。
+# 同理，旧的「保留 onMsg 以防桥接断开」说明也已作废。

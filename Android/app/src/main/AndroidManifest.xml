@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 播放期间保持屏幕常亮（对齐鸿蒙的 applyKeepScreenOn(true)） -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- ★ 2026-10-01（用户要求：媒体播控卡片）：MediaSessionService 需要前台服务 + mediaPlayback 类型。
+         Android 13+ 还需要通知权限，否则前台服务的通知（也就是播控卡片）不显示 —— MainActivity 会请求一次。 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ★★★★★ 2026-10-08 【已回退】包可见性 `<queries>` 声明 ★★★★★
+         原用途：让 `PackageManager.getPackageInfo("com.cctv…")` 能查到官方包，
+         以便把**官方证书**喂给 `libckeygenerator`（cKey 575 → 628）。
+         **实测副作用（用户当场发现）**：cKey 变成"混合身份"（官方证书 + 我们自己的证书两份）⇒
+         服务端判为可疑 ⇒ **限速**（分片 ~52 KB/s）且**回看/时移变慢或不可用**；
+         而"0 延迟真直播"并没有因此可用（628 ≠ 682，仍被限速）。
+         ⇒ 已回退（连同 `OfficialPkgContext` 与 `android:process`），恢复"只用自己身份"的 575 档
+         （回看/时移恢复快速、老链路直播可用）。若要复现该实验，把这段加回来：
+           <queries><package android:name="com.cctv.yangshipin.app.androidp" /></queries> -->
+
+    <!-- ★★ 2026-10-04：TV 适配（方案 A —— 同一个 APK 同时装到手机和 TV）★★
+         `required="false"` 是关键：声明"支持"但不"要求" ⇒ 手机（无 leanback/触摸屏特征）也能安装。
+         若写成 required="true" 就变成 TV 专用包，手机会被商店/系统过滤掉。 -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <application
+        android:name=".PalmTvApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:banner="@drawable/tv_banner"
+        android:supportsRtl="false"
+        android:theme="@style/Theme.PalmTV"
+        android:usesCleartextTraffic="true"
+        android:extractNativeLibs="true">
+        <!-- ⚠️ usesCleartextTraffic：IPTV 地方台列表里有 http:// 公开直链（源方就这么发的），
+             不放开的话这些台一律起播失败。央视频/江苏台链路都是 https。 -->
+
+        <!-- ★ 2026-10-01（与鸿蒙对标）：`screenOrientation="fullSensor"` = **跟随方向传感器、忽略系统"旋转锁定"**
+             —— 等价于鸿蒙 `Index.ets` 启动时设的 `setPreferredOrientation(AUTO_ROTATION)`：
+             手机横过来就自动切到横屏分栏（用户实测鸿蒙会、安卓不会，就是这个差异）。
+             ⚠️ 全屏时会在运行时改写成 `SENSOR_LANDSCAPE`（鸿蒙 `AUTO_ROTATION_LANDSCAPE`），见 MainActivity。 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="fullSensor"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode|density"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.PalmTV">
+            <!-- ★ configChanges 里必须带 orientation|screenSize：旋转时如果重建 Activity，
+                 播放器/Surface 会被销毁重建 ⇒ 黑屏一下（鸿蒙那边踩过"换 Row/Column 重建 surfaceId"）。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- ★ 2026-10-04：TV 桌面入口 —— Android TV 的桌面**只列**声明了 LEANBACK_LAUNCHER 的应用。
+                 与上面的 LAUNCHER 并存 ⇒ 手机桌面 / TV 桌面都能启动（见 MainActivity.isTvDevice 分流）。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- ★ 2026-10-01（用户要求）：媒体播控卡片（通知栏 / 锁屏 / 耳机按键 / 快捷设置播放条）。
+             Media3 的 MediaSessionService：绑定全局唯一播放器（`PlayerHolder`），
+             播放中会自行进入前台（foregroundServiceType=mediaPlayback）。 -->
+        <service
+            android:name=".player.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

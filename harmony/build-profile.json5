@@ -1,33 +1,37 @@
 {
   "app": {
-    // ★ 签名配置由 DevEco Studio 首次打开时生成（bundleName 已改为 com.RickyOne.PalmTV，
-    //   原工程的签名与旧 bundleName 绑定，不能直接复用）。
-    //   步骤：DevEco → File → Project Structure → Signing Configs → 勾选 "Automatically generate signature"
-    //
-    // ⚠️ 2026-09-16 提醒：本文件含 keystore 路径与口令（DevEco 加密串）⇒ **不要把工程推到公开远端**。
-    //   容器的 `.gitignore` 只把它当普通源文件跟踪（本地仓库=self 回退点，可接受）；
-    //   若要分享/上远端，请把 `signingConfigs` 抽到本地文件或改用自动签名。
+    // ★★★ 签名请自备，本文件只保留结构 ★★★
+    //   DevEco Studio → File → Project Structure → Signing Configs →
+    //   勾选 "Automatically generate signature"（会自动写入 signingConfigs 与 products 的引用）。
+    //   ⚠️ 仓库内**不包含**任何证书 / 密钥库 / Profile（`Profile/` 已被 .gitignore 排除）。
     "signingConfigs": [
       {
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\default_PalmTV_L_Hzhs37a6_xmuxPyonAAJddZWJt0NA5JdJt5IlFdrg=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001B390F70C0BA957079F753CC6990BC7447314D8A36E64FCD4B7E72319E99A6B26F9CFC41F2E9E6E4",
-          "profile": "C:\\Users\\Administrator\\.ohos\\config\\default_PalmTV_L_Hzhs37a6_xmuxPyonAAJddZWJt0NA5JdJt5IlFdrg=.p7b",
+          "storeFile": "./Profile/YOUR_KEYSTORE.p12",
+          "storePassword": "YOUR_STORE_PASSWORD",
+          "keyAlias": "YOUR_KEY_ALIAS",
+          "keyPassword": "YOUR_KEY_PASSWORD",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\default_PalmTV_L_Hzhs37a6_xmuxPyonAAJddZWJt0NA5JdJt5IlFdrg=.p12",
-          "storePassword": "0000001B2D2E47DD20CBE52840199BC98955EBFAC331364E203E40CDDBC34A63FD752A3DE5808B5B56214B"
+          "profile": "./Profile/YOUR_PROFILE.p7b",
+          "certpath": "./Profile/YOUR_CERT.cer"
         }
       }
     ],
+    // ================================================================================
+    // 产品（product）× 构建模式（buildMode）= DevEco 右上角的"构建变体"下拉
+    //
+    //   | 产品     | 构建模式  | 用途                                     | 混淆 | 能 hdc 直装 |
+    //   |---------|----------|-----------------------------------------|------|-----------|
+    //   | default | debug    | 日常真机调试（全量日志）                    | 关   | ✅ |
+    //   | default | release  | 混淆后真机自测（验证混淆版还能跑）           | 开   | ✅ |
+    //   | release | release  | 对外分发（发布证书，只能走应用市场内测）      | 开   | ❌ |
+    // ================================================================================
     "products": [
       {
         "name": "default",
         // ★ 必须显式引用 signingConfigs 里的条目，否则产物是 entry-*-unsigned.hap
-        //   （DevEco 的"Automatically generate signature"只会写 signingConfigs 数组，
-        //     不会替你补 products 里的引用）
         "signingConfig": "default",
         "targetSdkVersion": "6.1.1(24)",
         "compatibleSdkVersion": "6.1.0(23)",
@@ -41,6 +45,7 @@
       },
       {
         "name": "release",
+        // ★ 对外包：请把这里换成你自己的发布证书配置（或同样用 "default" 走调试签名自测）
         "signingConfig": "default",
         "targetSdkVersion": "6.1.1(24)",
         "compatibleSdkVersion": "6.1.0(23)",
@@ -49,6 +54,14 @@
           "strictMode": {
             "caseSensitiveCheck": true,
             "useNormalizedOHMUrl": true
+          },
+          // 正式版剔除模拟器用的 x86_64（真机只有 arm64-v8a）
+          "nativeLib": {
+            "filter": {
+              "excludes": [
+                "**/x86_64/**"
+              ]
+            }
           }
         }
       }

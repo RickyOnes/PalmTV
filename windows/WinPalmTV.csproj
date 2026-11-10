@@ -1,0 +1,116 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>WinPalmTV</AssemblyName>
+    <!-- ★★ 应用版本（2026-11-10：**3.11.10**，三端统一）★★
+    与鸿蒙 `AppScope\app.json5` 的 `versionName`、安卓 `app/build.gradle.kts` 的 `versionName` 保持一致。
+    关于页读的是程序集版本（Assembly.GetName().Version）⇒ `Major.Minor.Build` = 3.11.10。
+    ⚠️ 改这里必须同步改：`harmony/AppScope/app.json5`（versionName/versionCode）、
+       `Android/app/build.gradle.kts`（versionName/versionCode）。 -->
+    <Version>3.11.10</Version>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>tv-icon.ico</ApplicationIcon>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <!-- ★★ P3b 收尾：改 false —— `IncludeNativeLibrariesForSelfExtract=true` 与 `EnableCompressionInSingleFile`
+         **互斥**（自解压不能再压缩）⇒ 实测 exe 达 200MB、发布 ZIP 239MB。
+         改为 false 后 native 全部与调试输出同布局地落盘（libvlc\ / PalmTVCore.dll），
+         压缩随之生效 ⇒ exe 降到 ~70MB。⚠️ 因此所有 native 的 Content 都必须带 ExcludeFromSingleFile。 -->
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+    <!-- 不生成 .pdb 调试文件 -->
+    <DebugType>none</DebugType>
+    <!-- 只保留 .pdb 关联文件（避免复制 .xml 文档） -->
+    <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions>
+    <!-- 启用单文件压缩 -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- 只包含中文资源，减小体积 -->
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+    <!-- 跳过 workload 包缺失检查（Android workload 已卸载） -->
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp.WPF" Version="3.10.1" />
+    <!-- ★★ 2026-09-29：**ClearScript.V8 与 V8 原生包已移除** ★★
+         cKey 改为原生 C（`PalmTVCore.GenCKey` → `common\native\src\ysp_sign.c` 的 `ysp_gen_ckey`），
+         不再需要进程内 JS 引擎 ⇒ 发布包少 4~5 个 dll、不再需要把 V8 natives 手工拷到 exe 同目录，
+         也不用 `PalmTVCKey.cs` / `ts_module_body.js` 那套宿主。
+         （一并去掉 `System.Private.Uri`：当初是为压掉 ClearScript 传递依赖的 NU1903 告警才显式引的。） -->
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
+    <!-- Wasmtime 已移除: WasmSigner (C# 侧签名) 是死代码, 签名早已全部由页面内 keygen_bg.wasm 完成。
+         该包会带进 wasmtime.dll(8.73MB) + Wasmtime.Dotnet.dll(614KB)。源码保留在 legacy/WasmSigner.cs。 -->
+  </ItemGroup>
+
+  <!-- legacy/: 仅供分析/回溯的历史代码, 不参与编译 -->
+  <ItemGroup>
+    <Compile Remove="legacy/**" />
+    <None Include="legacy/**" />
+  </ItemGroup>
+
+  <!-- ★ 2026-09-29：原"把 ClearScript 的 V8 原生 dll 拷到 exe 同目录"那组 Content **已删除**
+       （cKey 原生化后不再需要 V8）⇒ 调试/发布输出里不会再出现 ClearScriptV8.win-x64.dll / v8*.dll。 -->
+
+  <!-- 伴生文件（调试和发布都复制） -->
+  <ItemGroup>
+    <!-- ★ 原生 CMG 解密核心（由 _private\build-palmtv-core.ps1 用 MinGW 编出；源码在 hmnative，不进本仓库）：
+         目标 = 三端共用同一套解密逻辑、播放器只吃明文 HLS。不存在时不影响构建（尚未编过则该功能未启用）。 -->
+    <!-- ★ ExcludeFromSingleFile="true"：单文件发布会把这类文件**打进 exe**、不在磁盘留副本 ——
+         而 P/Invoke 的 PalmTVCore.dll 必须是真实文件（同理 ic/o/json 也要可读）⇒ 强制落盘。 -->
+    <Content Include="PalmTVCore.dll" Condition="Exists('PalmTVCore.dll')" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" ExcludeFromSingleFile="true" />
+    <!-- ★★ CMGPlayer.json 不再随包分发：改由代码在首次使用原生核时按需生成（见 PalmTVCore.EnsureCmgPlayerJson）。
+         它是 8 行常量配置，分发一个 json 既没必要、也容易在打包时漏掉（发布版实测踩过：
+         `cmg_rt_init 失败 rc=-1: 打不开 <AppDir>/CMGPlayer.json` ⇒ 只出 cKey、画面永不播）。 -->
+    <!-- ★★ 2026-09-30：`tv-icon.ico` / `copyright.png` 改为**嵌入资源**（用户要求包内不再散落这两个文件）★★
+         以前是随包散文件（Content + ExcludeFromSingleFile + 发布脚本再手工拷一份），现在直接编进 exe：
+         包内少两个文件、没有路径问题。读取走 `Assembly.GetManifestResourceStream`（**不用 pack URI** ——
+         单文件发布下 pack URI 不可靠，这点以前踩过，见 MainWindow 里那两条注释）。
+         ⚠️ `<ApplicationIcon>tv-icon.ico</ApplicationIcon>` **保持不变**：那是**编译期**给 exe 嵌 Win32 图标，
+            与"运行期读图标"是两码事（所以工程目录里那份 tv-icon.ico 仍要留着）。 -->
+    <EmbeddedResource Include="tv-icon.ico" LogicalName="tv-icon.ico" />
+    <!-- ★ 2026-09-24：关于页的版权图标（源：D:\PalmTV\版权.ico 的 256x256 帧，ICO 里本就是 PNG） -->
+    <EmbeddedResource Include="copyright.png" Condition="Exists('copyright.png')" LogicalName="copyright.png" />
+    <!-- ★ 2026-10-02（三端一致）：关于页品牌区的应用图标（源：仓库根 `app_icon.png`，256x256） -->
+    <EmbeddedResource Include="app_icon.png" Condition="Exists('app_icon.png')" LogicalName="app_icon.png" />
+    <!-- ★ 频道台标瓷砖（64 张，本地从鸿蒙 rawfile/rf/*.dat 解码；**不随公开仓库分发**）:
+         `logos/real/<频道id>.png` 由 .gitignore 排除。缺失时 UI 自动退化为纯文字瓷砖。 -->
+    <!-- ★★ 台标：**调试**直接读散图（方便替换/调试）；**发布**由 publish.ps1 打包成单个 `logos.dat`
+         （64 张明文 PNG 既不美观也易被抄，且散文件在打包时更易漏 —— 曾因 Never 导致发布版只有文字台标）。
+         ⚠️ 因此这里 CopyToPublishDirectory 保持 Never 是**对的**：发布用 logos.dat，自检会检查它存在。 -->
+    <Content Include="logos\**\*.png" Condition="Exists('logos')" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" Link="logos\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- ★★ 2026-09-30：内置 IPTV 清单**不再随包**（用户要求"同步鸿蒙逻辑、放进代码里"）★★
+         15 个内置地方台已移入 `IptvChannels.cs` 的 `BuiltIn` 表（与鸿蒙 `ChannelList.ets` 逐条对齐），
+         `common\channels\iptv-local.m3u` 已删除 ⇒ 发布包里不再有 `iptv-local.m3u`。
+         ⚠️ 用户自己的源仍在外置文件 `%LOCALAPPDATA%\WinPalmTV\iptv-local.m3u`（关于页可编辑；同 URL 时用户优先）。
+         ⚠️ 改内置台时：`IptvChannels.BuiltIn`（C#）与 `ChannelList.ets` 的 `src:'iptv'` 组**必须同改**（含顺序）。 -->
+
+    <!-- ★★ P3b：`keygen_bg.wasm` / `RJq7sO71JF.wasm` 已从构建移除 —— 签名/票据早已由原生 C 核（ysp_gen_*）完成，
+         页内注入也已摘除 ⇒ 不再需要随 exe 复制（盘上的源文件先保留，属可再生的官方素材）。 -->
+    <!-- ★★ 2026-09-29：`ts_module_body.js` 的 EmbeddedResource **已删除** —— cKey 原生化后
+         没有任何代码再读它。⚠️ 盘上那份 `common\js\ts_module_body.js` **必须保留**：
+         它是"官方换版后重新推演 cKey"的唯一起点，也是 `re/oracle/ckey_golden.cjs` 的输入。 -->
+    <!-- <EmbeddedResource Include="..\common\js\ts_module_body.js" LogicalName="ts_module_body.js" /> -->
+    <!-- ★ P3b 收尾：`gen_yspticket.cjs` 不再随包 —— 它是 Node 兜底路径（PlayerService.GenerateYspTicket），
+         依赖的 `RJq7sO71JF.wasm` 早已不随包 ⇒ 发布版里它**永远不可能生效**，只是死重量。 -->
+    
+    <!-- ★★ 2026-11-06：**proxy.exe / sapi_cache 不再复制到输出目录** ★★（用户实测："每次编 debug 还在拷 proxy"）
+         2026-11-05 起桌面**完全不依赖 Go 代理**：
+           · 央视频 → `YspAndroidLive`（安卓平台链路，直连 HTTPS）
+           · 江苏台 → `JstvLive` 现算 txSecret + `LocalDecryptServer` 转发
+           · 节目单 → `EpgClient` 直连 capi（protobuf）
+           `proxy\` 源码与编好的 proxy.exe 仍留在工程里（回退用），只是**进不了任何构建输出**。
+         ⚠️ 若将来真要恢复代理链路：把下面 5 条 Content 加回来（`Link` 决定落到输出根目录）。 -->
+    <!--
+    <Content Include="$(MSBuildProjectDirectory)\proxy\proxy.exe" ... Link="proxy.exe" />
+    <Content Include="$(MSBuildProjectDirectory)\proxy\sapi_cache\assets_2025_wasm_cmg.slim.js" ... />
+    <Content Include="$(MSBuildProjectDirectory)\proxy\sapi_cache\assets_2025_wasm_eb_prog.bin" ... />
+    <Content Include="$(MSBuildProjectDirectory)\proxy\sapi_cache\assets_2025_wasm_reloc_table.bin" ... />
+    <Content Include="$(MSBuildProjectDirectory)\proxy\sapi_cache\assets_2025_wasm_hls.cmg.js" ... />
+    -->
+  </ItemGroup>
+
+</Project>

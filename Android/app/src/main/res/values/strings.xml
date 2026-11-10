@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ⚠️ 界面文案**不写在这里**：三端要求逐字一致，统一放
+         `com.rickyone.palmtv.ui.Strings`（照鸿蒙 Index.ets 抄，改一处要三端同改）。 -->
+    <!-- ★ 2026-10-02（用户要求）：**安装后的应用名只留中文**（原来 "PalmTV 掌上电视"）。
+         ⚠️ 三端一致：鸿蒙 `module.json5` 的 label、桌面端窗口标题也应同口径。 -->
+    <string name="app_name">掌上电视</string>
+</resources>

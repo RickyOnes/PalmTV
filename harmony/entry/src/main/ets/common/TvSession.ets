@@ -8,7 +8,7 @@
  *     ② 声明了权限却没有对应能力，上架审核容易被问。
  *   ⇒ 本模块补上"应用侧唯一的媒体会话出口"，与 `media.AVPlayer` 的状态手工同步。
  *
- * 设计要点（2026-09-16 对齐原版 `D:\TV\CCTV\旧 ArkWeb 版`）：
+ * 设计要点（2026-09-16 对齐原版 `D:\TV\CCTV\CctvPoC`）：
  *   - **不新增任何权限**（AVSession 不需要权限）；只把已有声明用起来。
  *   - 封面 = **白底正方形 + alpha 混合**（原版同款做法，见 `buildSquareCover`）——
  *     直接把透明台标丢给系统会显得又小又脏。
@@ -24,6 +24,7 @@ import { avSession as AVSessionManager } from '@kit.AVSessionKit';
 import { common } from '@kit.AbilityKit';
 import { image } from '@kit.ImageKit';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { Log } from './Log';
 
 /** 播控中心命令 → 交给页面处理（页面才知道播放器与频道列表） */
 export interface TvSessionHandlers {
@@ -62,41 +63,41 @@ export class TvSession {
       const s: AVSessionManager.AVSession = await AVSessionManager.createAVSession(ctx, TvSession.TAG, 'video');
       /* 注册即表示"支持该命令"（不注册的按钮在播控中心是灰的） */
       s.on('play', () => {
-        console.info('[TvSession] 播控中心 ⇒ play');
+        Log.i('[TvSession] 播控中心 ⇒ play');
         this.handlers.onPlay();
       });
       s.on('pause', () => {
-        console.info('[TvSession] 播控中心 ⇒ pause');
+        Log.i('[TvSession] 播控中心 ⇒ pause');
         this.handlers.onPause();
       });
       s.on('stop', () => {
-        console.info('[TvSession] 播控中心 ⇒ stop');
+        Log.i('[TvSession] 播控中心 ⇒ stop');
         this.handlers.onStop();
       });
       s.on('playNext', () => {
-        console.info('[TvSession] 播控中心 ⇒ 下一台');
+        Log.i('[TvSession] 播控中心 ⇒ 下一台');
         this.handlers.onNextChannel();
       });
       s.on('playPrevious', () => {
-        console.info('[TvSession] 播控中心 ⇒ 上一台');
+        Log.i('[TvSession] 播控中心 ⇒ 上一台');
         this.handlers.onPrevChannel();
       });
       await s.activate();
       this.session = s;
       this.ready = true;
-      console.info('[TvSession] AVSession 已创建并激活（播控中心 / 锁屏可见且可控制）');
+      Log.i('[TvSession] AVSession 已创建并激活（播控中心 / 锁屏可见且可控制）');
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[TvSession] 创建/激活失败（不影响播放）: ${err.code} ${err.message}`);
+      Log.w(`[TvSession] 创建/激活失败（不影响播放）: ${err.code} ${err.message}`);
     }
   }
 
   /**
-   * ★★ 生成"白底正方形"封面（对齐原版 旧 ArkWeb 版 的做法）★★
+   * ★★ 生成"白底正方形"封面（对齐原版 CctvPoC 的做法）★★
    *
    * 为什么不能直接把台标 PixelMap 丢给系统：台标是**透明背景**的方形 logo，
    * 直接当 `mediaImage` 时系统会用透明底渲染 ⇒ 深色卡片上显得又小又脏（用户反馈"太难看"）。
-   * 原版（`旧 ArkWeb 版/.../Index.ets:362-464`）的做法是：先读原图 RGBA，再按长边 ×1.1 建一张
+   * 原版（`CctvPoC/.../Index.ets:362-464`）的做法是：先读原图 RGBA，再按长边 ×1.1 建一张
    * **不透明白底正方形画布**，逐像素做 **alpha 混合**后放进去 ⇒ 播控中心/锁屏上就是
    * "白色方块 + 居中台标"，观感与官方一致。
    *
@@ -157,11 +158,11 @@ export class TvSession {
         editable: false
       };
       const cover: image.PixelMap = await image.createPixelMap(dstU8.buffer, opts);
-      console.info(`[TvSession] 已生成白底方形封面 ${canvasSize}x${canvasSize}（源图 ${sw}x${sh}）`);
+      Log.i(`[TvSession] 已生成白底方形封面 ${canvasSize}x${canvasSize}（源图 ${sw}x${sh}）`);
       return cover;
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[TvSession] 生成封面失败（改用原始台标）: ${err.message}`);
+      Log.w(`[TvSession] 生成封面失败（改用原始台标）: ${err.message}`);
       return null;
     }
   }
@@ -187,7 +188,7 @@ export class TvSession {
       this.coverCache.delete(old);
       if (pm !== undefined) {
         pm.release().catch((e: BusinessError) => {
-          console.warn(`[TvSession] 释放旧封面失败（忽略）: ${e.message}`);
+          Log.w(`[TvSession] 释放旧封面失败（忽略）: ${e.message}`);
         });
       }
     }
@@ -205,7 +206,7 @@ export class TvSession {
         assetId: assetId,
         title: title,
         artist: '掌上电视',
-        album: '源站直播·直播流'
+        album: '央视频直播·直播流'
       };
       const cover: image.PixelMap | undefined = await this.coverFor(assetId, icon);
       if (cover !== undefined) {
@@ -216,7 +217,7 @@ export class TvSession {
       await s.setAVMetadata(md);
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[TvSession] setAVMetadata 失败（忽略）: ${err.message}`);
+      Log.w(`[TvSession] setAVMetadata 失败（忽略）: ${err.message}`);
     }
   }
 
@@ -238,7 +239,7 @@ export class TvSession {
       await s.setAVPlaybackState(st);
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[TvSession] setAVPlaybackState 失败（忽略）: ${err.message}`);
+      Log.w(`[TvSession] setAVPlaybackState 失败（忽略）: ${err.message}`);
     }
   }
 
@@ -256,14 +257,14 @@ export class TvSession {
       await s.setAVPlaybackState(st);
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[TvSession] setAVPlaybackState(stop) 失败（忽略）: ${err.message}`);
+      Log.w(`[TvSession] setAVPlaybackState(stop) 失败（忽略）: ${err.message}`);
     }
   }
 
   /**
    * 销毁会话（**退后台**与**退出页面**都必须调）：
    *   直播流在后台/锁屏下"卡片可点但点了不生效"（取流+解密在后台不可靠）⇒ 原版的做法就是
-   *   退后台即销毁卡片（`旧 ArkWeb 版` 注释原话："避免卡片一直显示、按钮无响应"）。
+   *   退后台即销毁卡片（`CctvPoC` 注释原话："避免卡片一直显示、按钮无响应"）。
    *   回前台会重建（见 `Index.onPageShow` → `initTvSession`）。
    */
   async destroy(): Promise<void> {
@@ -272,7 +273,7 @@ export class TvSession {
       const pm: image.PixelMap | undefined = this.coverCache.get(k);
       if (pm !== undefined) {
         pm.release().catch((e: BusinessError) => {
-          console.warn(`[TvSession] 释放封面失败（忽略）: ${e.message}`);
+          Log.w(`[TvSession] 释放封面失败（忽略）: ${e.message}`);
         });
       }
     });
@@ -286,10 +287,10 @@ export class TvSession {
     this.ready = false;
     try {
       await s.destroy();
-      console.info('[TvSession] AVSession 已销毁');
+      Log.i('[TvSession] AVSession 已销毁');
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[TvSession] destroy 失败（忽略）: ${err.message}`);
+      Log.w(`[TvSession] destroy 失败（忽略）: ${err.message}`);
     }
   }
 }

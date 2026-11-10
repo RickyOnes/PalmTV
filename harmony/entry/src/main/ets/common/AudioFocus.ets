@@ -1,7 +1,7 @@
 /**
- * AudioFocus.ets —— 应用音频会话（焦点）管理（2026-09-16 新增，对齐原版 旧 ArkWeb 版 的口径）
+ * AudioFocus.ets —— 应用音频会话（焦点）管理（2026-09-16 新增，对齐原版 CctvPoC 的口径）
  *
- * 原版（`D:\TV\CCTV\旧 ArkWeb 版\...\pages\Index.ets:225-271`）的做法与结论：
+ * 原版（`D:\TV\CCTV\CctvPoC\...\pages\Index.ets:225-271`）的做法与结论：
  *   「无论静音还是有声播放，都必须使用 **CONCURRENCY_MIX_WITH_OTHERS（share）** 策略，
  *     与其他应用音频混合播放；**绝不使用 PAUSE/STOP 独占策略**打断其他音频」
  *   —— 这是官方审核口径（音频独占会打断别人播放）。
@@ -22,6 +22,7 @@
  */
 import { audio } from '@kit.AudioKit';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { Log } from './Log';
 
 export class AudioFocus {
   private mgr: audio.AudioSessionManager | null = null;
@@ -48,14 +49,14 @@ export class AudioFocus {
       this.mgr.on('audioSessionDeactivated', (e: audio.AudioSessionDeactivatedEvent) => {
         const reason: string = `${e.reason}`;
         this.active = false;
-        console.warn(`[AudioFocus] 音频会话被系统停用（reason=${reason}）⇒ 通知页面暂停`);
+        Log.w(`[AudioFocus] 音频会话被系统停用（reason=${reason}）⇒ 通知页面暂停`);
         this.onDeactivated(reason);
       });
       this.bound = true;
-      console.info('[AudioFocus] AudioSessionManager 就绪');
+      Log.i('[AudioFocus] AudioSessionManager 就绪');
     } catch (e) {
       const err = e as BusinessError;
-      console.warn(`[AudioFocus] 初始化失败（不影响播放）: ${err.code} ${err.message}`);
+      Log.w(`[AudioFocus] 初始化失败（不影响播放）: ${err.code} ${err.message}`);
     }
   }
 
@@ -76,9 +77,9 @@ export class AudioFocus {
     };
     m.activateAudioSession(strategy).then(() => {
       this.active = true;
-      console.info('[AudioFocus] 已激活音频会话（SHARE/MIX，不独占）');
+      Log.i('[AudioFocus] 已激活音频会话（SHARE/MIX，不独占）');
     }).catch((e: BusinessError) => {
-      console.warn(`[AudioFocus] 激活失败（不影响播放）: ${e.code} ${e.message}`);
+      Log.w(`[AudioFocus] 激活失败（不影响播放）: ${e.code} ${e.message}`);
     });
   }
 
@@ -90,9 +91,9 @@ export class AudioFocus {
     }
     this.active = false;
     m.deactivateAudioSession().then(() => {
-      console.info('[AudioFocus] 已停用音频会话（焦点已归还）');
+      Log.i('[AudioFocus] 已停用音频会话（焦点已归还）');
     }).catch((e: BusinessError) => {
-      console.warn(`[AudioFocus] 停用失败（忽略）: ${e.code} ${e.message}`);
+      Log.w(`[AudioFocus] 停用失败（忽略）: ${e.code} ${e.message}`);
     });
   }
 }

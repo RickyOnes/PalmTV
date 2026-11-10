@@ -6,8 +6,9 @@
   "author": "RickyOne",
   "license": "",
   "dependencies": {
-    // ★ native 解密模块（CMake 产物 libcmg_napi.so 的类型声明）
-    //   源码来自 hmnative/native/，由 src/main/cpp/CMakeLists.txt 编译
-    "libcmg_napi.so": "file:./src/main/cpp/types/libcmg_napi"
+    // ★ native 模块（CMake 产物 libpalmtv_napi.so 的类型声明）
+    //   源码来自 common/native/，由 src/main/cpp/CMakeLists.txt 编译
+    //   2026-11-07：只剩"自研 cKey + 江苏台签名"（CMG 解密核已移除）
+    "libpalmtv_napi.so": "file:./src/main/cpp/types/libpalmtv_napi"
   }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ★★ 2026-10-05（用户真机实测：创维 A20 / Android 8.1 / 32 位 / 4K）★★
+
+  为什么 TV 版要单独用 **TextureView** 而不是默认的 SurfaceView：
+    现象 = "所有台（含明文 IPTV）都闪跳、缓冲却有 5~12 秒、图像模式无关，而**央视频官方 App 同台正常**"
+    ⇒ 数据侧没问题（缓冲充足）、电视硬件也没问题（官方 App 能放）⇒ 出在**我们的渲染方式**上。
+    `PlayerView` 默认是 **SurfaceView**：它在窗口里挖一个"洞"再由系统单独合成那一层。
+    嵌在 Compose（`AndroidView`）里时，这个"洞"与 Compose 自己那层的刷新不同步 ⇒
+    **部分电视 GPU/合成器上就会出现"同帧闪、跳"**（正是用户看到的现象）。
+    **TextureView** 是画在普通 View 层里（OES 纹理），与 Compose 一起来合成 ⇒ 没有"洞"、不会闪 ✗。
+    代价：每帧多一次 GPU 纹理取样（1080p 在 Mali-G51 上通常没问题；若反而变卡，再换回 surface_view）。
+
+  ⚠️ 这里的 `surface_type` / `use_controller` 只能用 XML 属性设（PlayerView 没有对应的 setter）。
+-->
+<androidx.media3.ui.PlayerView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:surface_type="texture_view"
+    app:use_controller="false"
+    app:resize_mode="fit" />

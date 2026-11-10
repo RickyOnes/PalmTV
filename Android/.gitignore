@@ -1,0 +1,13 @@
+# 构建产物（与 windows\bin / harmony\build 同等地位）
+.gradle/
+build/
+app/build/
+app/.cxx/
+.cxx/
+local.properties
+*.iml
+.idea/
+captures/
+
+# Kotlin 编译缓存/错误日志（本机构建产物，2026-10-01 补）
+.kotlin/

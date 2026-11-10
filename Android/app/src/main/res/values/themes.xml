@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 全屏黑底深色主题（与鸿蒙/桌面同一套配色：#0a0a0a 底）。
+         ★ 2026-10-01 拆成 Base + 别名：`windowLayoutInDisplayCutoutMode` 在 API 30 才有 `always`
+           这个取值，需要由 `values-v30/themes.xml` 覆盖；而 styles 在更具体的配置里是**整体替换**
+           而不是合并 ⇒ 必须把公共项放在 Base 里复用。 -->
+    <style name="Theme.PalmTV.Base" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0a0a0a</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:statusBarColor">#101010</item>
+        <item name="android:navigationBarColor">#101010</item>
+        <!-- false = 状态栏图标用**浅色（白）**（本应用是深色主题） -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:colorBackground">#0a0a0a</item>
+    </style>
+
+    <style name="Theme.PalmTV" parent="Theme.PalmTV.Base" />
+</resources>

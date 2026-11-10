@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ★★ 2026-11-04（手机端"退后台立刻回前台：有声无画、换台也没用、横屏一次才恢复"）★★
+
+  为什么手机端也改用 **TextureView**（与 TV 端 `tv_player_view.xml` 一致）：
+
+    · `PlayerView` 默认是 **SurfaceView** —— 它在窗口里挖一个"洞"，Surface 由系统单独管理。
+      退后台/回前台的瞬间那块 Surface 会被销毁又重建，而播放器可能还握着**旧的那块**，
+      于是"解码在跑、声音正常、画面全黑"；换台只是换 MediaItem，**视图和 Surface 没换** ⇒ 依然黑。
+    · 用户实测线索正好对上：**只有切一次横屏才恢复**（manifest 里 `configChanges` 含 orientation/screenSize，
+      转屏不重建 Activity，但 **SurfaceView 尺寸变了 ⇒ Surface 被销毁重建** ⇒ 画面回来）。
+    · **TextureView** 是画在普通 View 层里的 OES 纹理，没有独立 Surface 生命周期，
+      回前台/换台都不会出现"握着已失效 Surface"这种状态 —— TV 端用它就从来没报过这个问题。
+
+  代价：每帧多一次 GPU 纹理取样（手机 GPU 充足，可忽略）；极少数机型的 HDR 直通会退化（若发现 4K/8K 偏色再评估）。
+
+  ⚠️ `surface_type` / `use_controller` 只能通过 XML 属性设置（`PlayerView` 没有对应 setter）。
+-->
+<androidx.media3.ui.PlayerView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:surface_type="texture_view"
+    app:use_controller="false"
+    app:resize_mode="fit" />

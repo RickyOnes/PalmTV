@@ -1,0 +1,85 @@
+<Window x:Class="PalmTVDesktop.EpgOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" ResizeMode="NoResize" Title="节目单">
+    <!-- ★★ 2026-11-06：全屏居中覆盖层节目单（对齐安卓 EpgSheet）★★
+         前 6 天 / 今天 / 后 3 天（2026-11-10 与鸿蒙/安卓统一为 10 天）；条目按状态着色：
+           ▶ 正在播出（红；回看期间整行绿粗）/ ↺ 可回看（正常）/ · 不可回看（灰） / ◷ 未播出（灰） -->
+    <Border Background="#F016213E" CornerRadius="12"
+            BorderBrush="#2A3A5A" BorderThickness="1">
+        <Grid Margin="18,14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <TextBlock x:Name="TitleText" FontSize="17" Foreground="#E94560" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                <!-- ★ 2026-11-06：右上角关闭按钮（用户要求；Esc 仍然有效） -->
+                <Button x:Name="BtnClose" Content="✕" Width="30" Height="30"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Background="Transparent" Foreground="#A8B6C8" BorderThickness="0"
+                        FontSize="16" Cursor="Hand" Click="BtnClose_Click"
+                        ToolTip="关闭（Esc）"/>
+            </Grid>
+
+            <!-- ★★ 2026-11-10（用户反馈：日期 TAB 不能左右滚动）★★
+                 日期条：前 6 天 ~ 后 3 天（+今天共 10 天），可左右滚动三种方式 ——
+                   ① 两侧 ◀ / ▶ 按钮（**鼠标悬停即连续滚动**，单击滚一屏的 60%）；
+                   ② 鼠标滚轮（转成横向滚动）；③ 触摸/触控板横向拖动（PanningMode）。
+                 ★★ 2026-11-10 二次修改（用户："滚动条太难看，移除，用箭头代替"）★★
+                   ⇒ 横向滚动条 **Hidden**，只留两侧箭头。 -->
+            <Grid Grid.Row="1" Margin="0,12,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="BtnDayLeft" Grid.Column="0" Content="◀" Width="20" Height="26"
+                        Margin="0,0,4,0" Padding="0" Background="Transparent" Foreground="#A8B6C8"
+                        BorderThickness="0" FontSize="10" Cursor="Hand" Tag="-1"
+                        Click="BtnDayLeft_Click" MouseEnter="HoverArrow_Enter" MouseLeave="HoverArrow_Leave"
+                        ToolTip="往前看几天（按住/悬停连续滚动）"/>
+                <ScrollViewer x:Name="DayScroller" Grid.Column="1"
+                              HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                              PanningMode="HorizontalOnly"
+                              PreviewMouseWheel="DayBar_PreviewMouseWheel">
+                    <StackPanel x:Name="DayBar" Orientation="Horizontal"/>
+                </ScrollViewer>
+                <Button x:Name="BtnDayRight" Grid.Column="2" Content="▶" Width="20" Height="26"
+                        Margin="4,0,0,0" Padding="0" Background="Transparent" Foreground="#A8B6C8"
+                        BorderThickness="0" FontSize="10" Cursor="Hand" Tag="1"
+                        Click="BtnDayRight_Click" MouseEnter="HoverArrow_Enter" MouseLeave="HoverArrow_Leave"
+                        ToolTip="往后看几天（按住/悬停连续滚动）"/>
+            </Grid>
+
+            <!-- ★★ 2026-11-10（用户："节目滚动条太难看，移除，用箭头代替"）★★
+                 列表滚动条 **Hidden**；右侧一列 ▲/▼ 箭头，**鼠标悬停即连续滚动**，单击滚 3 行。 -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ScrollViewer Grid.Column="0" x:Name="ProgScroll" VerticalScrollBarVisibility="Hidden"
+                              PanningMode="VerticalOnly">
+                    <StackPanel x:Name="ProgList"/>
+                </ScrollViewer>
+                <Grid Grid.Column="1" Width="22" Margin="6,0,0,0">
+                    <Button x:Name="BtnProgUp" Content="▲" Height="26" Width="22" Padding="0"
+                            VerticalAlignment="Top" Background="Transparent" Foreground="#A8B6C8"
+                            BorderThickness="0" FontSize="10" Cursor="Hand" Tag="-1"
+                            Click="BtnProgUp_Click" MouseEnter="HoverArrow_Enter" MouseLeave="HoverArrow_Leave"
+                            ToolTip="往上翻（悬停连续滚动）"/>
+                    <Button x:Name="BtnProgDown" Content="▼" Height="26" Width="22" Padding="0"
+                            VerticalAlignment="Bottom" Background="Transparent" Foreground="#A8B6C8"
+                            BorderThickness="0" FontSize="10" Cursor="Hand" Tag="1"
+                            Click="BtnProgDown_Click" MouseEnter="HoverArrow_Enter" MouseLeave="HoverArrow_Leave"
+                            ToolTip="往下翻（悬停连续滚动）"/>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

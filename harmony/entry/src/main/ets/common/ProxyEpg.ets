@@ -35,12 +35,13 @@ function readVarint(b: Uint8Array, start: number): VarintResult {
 /**
  * 解析单个节目 protobuf 消息 → JSON 字符串。
  *
- * 权威字段表（来源：真实抓包响应体逐字节解码 + `proxy/main.go` 的 parseEpgProgram）：
+ * 权威字段表（来源：真实抓包 `yangshipin.cn.har` 响应体逐字节解码 +
+ * `CCTV/cctv-proxy/main.go:96-141` 的 parseEpgProgram）：
  *   [1] id(string)  [2] title(string)
  *   [3] start_time **epoch 秒**(varint)   ★ UI 侧就是按这个解析的（此前漏读 ⇒ 时间恒为 --:--）
  *   [4] end_time   **epoch 秒**(varint)   ★
  *   [5] start_time "HH:mm"(string)  [6] end_time "HH:mm"(string)   ← 仅作兜底/显示
- *   [7] duration(varint 秒)  [9]/[10] 标志位(string)
+ *   [7] duration(varint 秒)  [9] 标志位(string)  **[10] 是否可回看**(string，`"2"` = 不可)
  * 注：抓包里**没有**"是否正在播出"字段、也没有描述；正在播出只能由 [3]/[4] 与本地时间比较得出。
  */
 function parseEpgProgram(b: Uint8Array): string {
@@ -51,6 +52,9 @@ function parseEpgProgram(b: Uint8Array): string {
   let startHm = '';
   let endHm = '';
   let dur = 0;
+  /* ★ 2026-11-08（回看）：字段 [10] 是"官方是否允许回看"的标志串 —— 安卓实测 `"2"` = 不可回看
+   *   （版权等原因），缺字段/其它值 = 允许。没有它就会给"版权不可回看"的节目也画上「回看」，点了必然失败。 */
+  let replayFlag = '';
   let off = 0;
   while (off < b.length) {
     const tagRes = readVarint(b, off);
@@ -85,6 +89,8 @@ function parseEpgProgram(b: Uint8Array): string {
         startHm = s;
       } else if (fnum === 6) {
         endHm = s;
+      } else if (fnum === 10) {
+        replayFlag = s;
       }
     } else {
       /* ★ 未知 wire type（1/3/4/5）：**跳过该字段**而不是丢掉整条节目（原来 return '' 会连标题一起没了） */
@@ -104,7 +110,9 @@ function parseEpgProgram(b: Uint8Array): string {
   const st = startSec > 0 ? String(startSec) : startHm;
   const et = endSec > 0 ? String(endSec) : endHm;
   const titleEsc = title.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return `{"id":"${id}","title":"${titleEsc}","start":"${st}","end":"${et}","dur":${dur}}`;
+  /* rp = 1 可回看（缺字段按可回看处理）；只有明确 "2" 才禁止 */
+  const rp = replayFlag === '2' ? 0 : 1;
+  return `{"id":"${id}","title":"${titleEsc}","start":"${st}","end":"${et}","dur":${dur},"rp":${rp}}`;
 }
 
 function pad2(n: number): string {

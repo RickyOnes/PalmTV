@@ -49,19 +49,10 @@
         ]
       }
     ],
-    "extensionAbilities": [
-      {
-        "name": "EntryBackupAbility",
-        "srcEntry": "./ets/entryability/EntryAbility.ets",
-        "type": "backup",
-        "exported": false,
-        "metadata": [
-          {
-            "name": "ohos.extension.backup",
-            "resource": "$profile:backup_config"
-          }
-        ],
-      }
-    ]
+    /* ★★ 2026-11-10（用户要求）：**彻底删除备份/恢复扩展** ★★
+     *   本应用没有"备份"入口（用户可在设置里的系统备份直接带走数据），而原声明
+     *   `EntryBackupAbility` 的 `srcEntry` 一直错指向 `EntryAbility.ets`（导出的是 UIAbility），
+     *   备份从未真正生效 ⇒ 直接去掉整段 extensionAbilities 与 `resources/base/profile/backup_config.json`，
+     *   少一个"名义存在却坏的"组件（上架审核也不必解释它）。 */
   }
 }

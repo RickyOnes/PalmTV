@@ -1,0 +1,6 @@
+{
+  "name": "libpalmtv_napi.so",
+  "types": "./index.d.ts",
+  "version": "1.0.0",
+  "description": "自研 cKey + 江苏台签名 N-API 模块（common/native 的鸿蒙封装）"
+}

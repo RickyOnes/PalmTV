@@ -1,14 +1,25 @@
 {
   "apiType": "stageMode",
   "buildOption": {
-    // ★ 接入 native 解密模块（libcmg_napi.so）
-    //   CMake 源在 entry/src/main/cpp/CMakeLists.txt，它引用 hmnative/native/ 的 gate1 内核。
+    // ★ 接入 native 模块（libpalmtv_napi.so：自研 cKey + 江苏台签名）
+    //   CMake 源在 entry/src/main/cpp/CMakeLists.txt，它引用 common/native/ 的 4 个 .c。
     "externalNativeOptions": {
       "path": "./src/main/cpp/CMakeLists.txt",
-      "arguments": "",
+      // ★ 2026-09-29：**不要 C++ 运行时**。
+      //   本模块的源（`common/native/**`）**全是 C**，
+      //   但 DevEco 的 native 工具链默认 `OHOS_STL=c++_shared` ⇒ 会白白塞进一个
+      //   `libc++_shared.so`（**1,262,504 B**，比我们自己的 .so 还大几十倍！）。
+      //   `-DOHOS_STL=none` 关掉它，包体直接省 ~1.26 MB。
+      //   ⚠️ 若链接报缺 C++ 符号（例如哪天引入了 C++ 源），改成 `-DOHOS_STL=c++_static`
+      //      —— 那样运行时会静态并进 libpalmtv_napi.so，总包体仍净省 ~1 MB。
+      "arguments": "-DOHOS_STL=none",
       "cppFlags": "",
+      // ★ 2026-11-08：加 `x86_64` 是为了**本机模拟器（Pura 90，ABI 只有 x86_64）能装**。
+      //   不加就是 `bm install` 报 `9568347 / install parse native so failed … Abi type … does not match`。
+      //   代价极小：native 模块现在只有 4 个 C 源，两个架构的 .so 各 ~16 KB（CMG 时代是 3 MB+，所以当时只出 arm64）。
       "abiFilters": [
-        "arm64-v8a"
+        "arm64-v8a",
+        "x86_64"
       ]
     }
   },
